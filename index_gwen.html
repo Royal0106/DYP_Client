@@ -1,0 +1,1921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>THB Field App - Prototype v0.10 DRAFT</title>
+<!--
+  THB FIELD APP (OpsVoice line) - single-file working prototype (DRAFT v0.10)
+  Design Your Price (TH Builds LLC) - Jason Jones - updated 8/4/2026
+
+  v0.10 CHANGES (correcting v0.9 to the EXACT 8/4/26 meeting record,
+  "Project Management System Setup" transcript, timestamps cited):
+   - REPORT / UPDATE TAB PARKED. Jason 11:34: "can we get rid of that
+     tab? Because right, if let's just say we don't use walkie-talkie,
+     let's just take that out for a minute and just stick with toolbox
+     and walk through for the sub." Tanner 11:55: "Yep. Yeah, that'll
+     work great." The tab button is REMOVED from the nav for this
+     version. The voice-report code stays in the file, dormant, so it
+     can return as its own version later without a rebuild. Nothing
+     from Report was lost: photos and video live on Toolbox and the
+     Walkthrough, and per-item capture is unchanged.
+   - TOOLBOX IS NOW PER JOB, NOT PER DAY. Jason 12:19: "really I want
+     that start a job in the job, right?" Jason 12:42: "on site off
+     site like something like that." Tanner 12:51: "yeah yeah that's
+     great." Jason 07:55: "it's not just morning because you have
+     multiple jobs, but like every job walk up needs to have like a
+     start checklist, even if it's three things." Start of Day is now
+     ON SITE (arrive at a job), End of Day is now OFF SITE (leave that
+     job). Crews do them at EVERY job they hit, not once daily. Field
+     labels updated to per-job wording; webhook payload keys are
+     UNCHANGED (type stays toolbox_start / toolbox_end) so the Make
+     scenario needs no changes.
+   - Tabs now: Toolbox (default), Walkthrough, Feed, Setup.
+   - The one-time mic permission card STAYS, on Toolbox and Setup.
+     Voice reporting is parked, not dead; enabling the mic now means
+     the voice version works the day it returns, and it remains the
+     most important hosting acceptance test.
+   - Hosting: bullseyeconsulting.ai (Jason's team) for now, until the
+     tool is ready to hand over. Jason 09:10: "I'll may put it on my
+     site just since I don't have your admin, with a webhook." Full
+     steps: Build Spec v0.4.
+
+  v0.9 CHANGES (per the 8/4/26 Tanner meeting, "Project Management
+  System Setup" recording):
+   - Toolbox is now the DEFAULT tab. It is the daily driver: Start of
+     Day and End of Day check-ins are the capture surface agreed in
+     the meeting.
+   - Start of Day now takes VIDEO as well as photos, same native
+     camera capture, no permission prompt. End of Day and the QC
+     walkthrough already had video; the meeting asked for video on
+     both Toolbox entries and the walkthrough, and that is now true
+     everywhere.
+   - NEW mic permission card at the top of Toolbox and in Setup: one
+     "Enable microphone" button that triggers the real browser
+     permission prompt on iPhone AND Android. It must be tapped by a
+     person (browsers require a user gesture, especially iOS Safari),
+     runs a 1-second silent open-and-release of the mic, then reports
+     Granted / Denied with the exact per-platform fix path. Do this
+     once per phone at setup and TAP TO TALK works from then on.
+   - Walkie-talkie / live-radio: confirmed OUT, per the 8/4 meeting.
+     (Already absent from v0.8; the spec has said since v0.1 that live
+     push-to-talk is a bought product, not this build.)
+   - No walkie tab, no layout changes otherwise. Webhook payloads are
+     unchanged except source becomes thb_opsvoice_v0.9.
+
+  v0.9.1: hosting guidance replaced. Free or temporary hosts are OUT
+  by Jason's direction 8/4/26; anonymous drag-and-drop deploys expire
+  and cannot carry a field tool. Host on PAID, PERMANENT infrastructure
+  the client or consultant already controls. Primary: a GoHighLevel
+  WordPress-hosting custom HTML page on the mapped custom domain,
+  served directly (no iframe) over HTTPS; this file is one self-
+  contained HTML under the 5 MB limit, which is exactly what that
+  feature takes. Alternates: the consultant's own paid web hosting, or
+  a paid static host. The mic prompt only appears on HTTPS pages
+  served frame-free, so whatever host is chosen must pass the
+  acceptance test in Build Spec v0.3 Section 5 before rollout.
+
+  v0.8 CHANGES (Toolbox start of day / end of day):
+   - NEW Toolbox tab, placed first in the nav since it is what a worker
+     opens each morning, before Report / Update. Two modes selected by
+     a toggle at the top of the tab: Start of Day and End of Day.
+   - Start of Day captures job, who is reporting, crew size on site,
+     the highest risk activity or safety concern, build or sub work
+     problems, a 1 to 5 site cleanliness score with a correction and
+     owner field, materials on site status, and photos using the same
+     native camera capture already used on the Report tab.
+   - End of Day captures job, who is reporting, work completed, hours
+     worked (decimal, replaces texting hours in), anything that will
+     stop work tomorrow, inspection or paperwork notes, photos, and an
+     optional end of day walkthrough video using the same video
+     capture already used elsewhere in this file.
+   - Both modes build a record in the same shape used everywhere else
+     in the app (category, system, owner, and priority looked up from
+     TAXONOMY, a plain text transcript summary, photos) so the Feed
+     and the webhook keep working with no changes on their side.
+     Hours and the cleanliness score are also stored as their own
+     named fields so they can be reported on later. A Start of Day
+     safety concern that is not the word None routes that record to
+     Emergency / safety, otherwise both records file as Operational
+     update.
+
+  v0.6 CHANGES (real QC checklist):
+   - Walkthrough templates replaced with the full Design Your Price
+     Subcontractor Quality Checklist: 17 trades, each with Section 1
+     (Quality Standard) and Section 2 (Punchlist required prior to
+     final payment), transcribed from the printed form.
+   - Added the form's closing block per trade: defects yes/no question,
+     Inspections Needed checkboxes (with Other fields), and typed
+     sub/PM sign-off names. Final-payment gate language shown in-app.
+   - Failed items still auto-create High-priority queue tasks with
+     photo evidence; the task text now cites the trade checklist.
+   - The End-of-Day Site Close-out demo walk remains under a separate
+     Field Ops group.
+
+  v0.5 CHANGES (visual QC: photo, video, walkthrough checklist):
+   - Photo and video capture on any report via the phone's NATIVE
+     camera (input capture attributes) - no getUserMedia, no permission
+     prompts, works in any browser/frame including wrapped hosts.
+   - NEW Walkthrough tab: pick a job + checklist template, mark each
+     item Pass / Fail / NA, attach photos/video/notes per item. On
+     completion, every FAILED item automatically becomes its own
+     assignable task in the queue (category Quality issue, photo
+     evidence attached) plus a scored summary record. This is the QC
+     cross-reference: checklist result > task > owner > resolved.
+   - Templates here are DEMO items sourced from DYP's own meetings
+     (cleanliness score, 4pm material gate, lineout posted, yellow
+     sheet, windows wrapped, fan boxes). PROD: the real 1,100-point
+     Utah remodel QC checklist loads here as JSON templates per trade
+     and phase - the UI does not change.
+   - Photos are compressed on-device (~900px JPEG) and ride the same
+     webhook to Airtable. Video stays on-device in the demo; PROD:
+     upload to cloud storage via presigned URL, link in the queue row.
+   - localStorage guard: oldest photos are dropped first if the local
+     demo store approaches the browser quota.
+
+  v0.4 CHANGES (shared queue wiring):
+   - NEW Setup tab: paste a Make.com (or any) webhook URL once per
+     device. Submissions then POST as JSON (context + transcript +
+     classification + audio as base64) to that webhook, where the
+     automation transcribes (if audio-only), re-classifies with an LLM,
+     writes the Airtable queue row, creates the JobTread to-do, and
+     fires owner alerts. See DYP_OpsVoice_Wiring_Guide_v1_DRAFT.docx.
+   - Submit shows SENT TO QUEUE / QUEUED LOCALLY so the crew knows
+     whether the item left the phone. If the webhook is unreachable,
+     the item is kept locally and flagged "not synced" - nothing lost.
+   - "Send test" button verifies the webhook from the phone.
+   - Local feed remains as the on-device log; the real review/resolve
+     queue lives in Airtable + JobTread once wired.
+
+  v0.3 CHANGES (mic-block diagnosis + zero-permission voice path):
+   - Detects when the page is served inside a host wrapper frame (tiiny
+     free tier does this) - iOS will NOT pass mic permission through a
+     cross-origin frame, so the mic reports blocked without asking.
+     The app now says exactly that instead of a generic message.
+   - Error messages now branch on the real failure (frame block vs
+     site permission denied vs no device) with the exact iPhone
+     settings path to fix each one.
+   - NEW: "Dictate (keyboard mic)" - uses the iPhone keyboard's built-in
+     dictation key to speak into the transcript box. Needs NO browser
+     mic permission, NO settings, works in any host/frame. This is the
+     field-proof fallback; audio evidence capture stays optional.
+
+  v0.2 CHANGES (mobile fix):
+   - Hold-to-talk replaced with TAP TO TALK / TAP TO STOP toggle. Hold
+     gestures break on iOS (permission prompt interrupts the hold,
+     touchend gets eaten, long-press triggers callout menus).
+   - Proper recording state machine (idle > starting > recording) so a
+     tap during the permission prompt cannot wedge the button.
+   - MediaRecorder mimeType negotiated (iOS Safari = audio/mp4, not webm).
+   - Secure-context detection: mic requires HTTPS (or localhost). When
+     the file is opened directly from Files/file://, the app says so and
+     drops cleanly into typed/sample mode instead of dying silently.
+   - Live Web Speech transcription skipped on iOS (it conflicts with
+     MediaRecorder there); transcript is typed/edited after recording,
+     exactly like production where the STT API transcribes the audio.
+   - contextmenu/select suppression on the mic button.
+
+  PRODUCTION SWAP POINTS (marked // PROD:):
+   - Transcription: send the recorded blob to AssemblyAI or OpenAI
+     gpt-4o-mini-transcribe; drop the typed fallback.
+   - Classification: replace classify() keyword rules with a small-LLM
+     call using the same taxonomy prompt.
+   - Storage: replace localStorage with Airtable (or Supabase).
+   - Routing: on submit, POST a to-do/comment to JobTread Pave API
+     (api.jobtread.com) for the selected job; Emergency = SMS/GHL alert.
+
+  All demo data stays on this device until a webhook is set. No login.
+  To use the microphone on iPhone: host this file at a permanent HTTPS
+  URL on the company's paid hosting (see Build Spec v0.3) and open it
+  in Safari.
+-->
+<style>
+  :root{
+    --navy:#1F3864; --navy2:#2a4a80; --teal:#0e7c7b; --bg:#f4f5f7;
+    --card:#ffffff; --line:#dfe3e8; --txt:#1c2733; --mut:#68737d;
+    --red:#c0392b; --amber:#c87f0a; --green:#1e7e34; --gray:#6c757d;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{margin:0; font-family:Arial, Helvetica, sans-serif; background:var(--bg); color:var(--txt);}
+  header{background:var(--navy); color:#fff; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px;}
+  header h1{font-size:17px; margin:0; letter-spacing:.5px;}
+  header .draft{background:#ffd54d; color:#5a4500; font-size:11px; font-weight:bold; padding:3px 8px; border-radius:4px;}
+  nav{display:flex; background:var(--navy2); position:sticky; top:0; z-index:5;}
+  nav button{flex:1; background:none; border:none; color:#cdd7ea; padding:12px 4px; font-size:13px; font-weight:bold; cursor:pointer; border-bottom:3px solid transparent; font-family:inherit;}
+  nav button.active{color:#fff; border-bottom-color:#ffd54d;}
+  main{max-width:760px; margin:0 auto; padding:14px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:14px;}
+  .card h2{font-size:14px; margin:0 0 10px; color:var(--navy); text-transform:uppercase; letter-spacing:.5px;}
+  label{font-size:12px; color:var(--mut); display:block; margin:8px 0 3px;}
+  select,input[type=text],textarea{width:100%; padding:10px; border:1px solid var(--line); border-radius:6px; font-size:16px; font-family:inherit; background:#fff;}
+  textarea{min-height:90px; resize:vertical;}
+  .row{display:flex; gap:10px;} .row>div{flex:1;}
+  @media (max-width:560px){ .row{flex-direction:column; gap:0;} }
+  /* mic */
+  .micwrap{text-align:center; padding:8px 0 4px;}
+  .micbtn{width:128px; height:128px; border-radius:50%; border:none; background:radial-gradient(circle at 35% 30%, #2a5aa8, var(--navy)); color:#fff; font-size:14px; font-weight:bold; cursor:pointer; box-shadow:0 4px 14px rgba(31,56,100,.35); user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:manipulation; font-family:inherit;}
+  .micbtn.starting{opacity:.7;}
+  .micbtn.rec{background:radial-gradient(circle at 35% 30%, #e05b4b, var(--red)); animation:pulse 1.2s infinite;}
+  .micbtn.disabled{background:radial-gradient(circle at 35% 30%, #9aa4b2, #6c757d); box-shadow:none;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(192,57,43,.45);}70%{box-shadow:0 0 0 22px rgba(192,57,43,0);}100%{box-shadow:0 0 0 0 rgba(192,57,43,0);}}
+  .micnote{font-size:12px; color:var(--mut); margin-top:10px; line-height:1.45;}
+  .micnote b{color:var(--navy);}
+  .timer{font-size:24px; font-weight:bold; color:var(--red); margin-top:8px; min-height:28px;}
+  .fallbacks{display:flex; gap:8px; justify-content:center; margin-top:12px; flex-wrap:wrap;}
+  .chip{background:#eef2f8; border:1px solid var(--line); border-radius:16px; padding:8px 14px; font-size:13px; cursor:pointer; color:var(--navy); font-family:inherit;}
+  .chip:active{background:#d8e2f2;}
+  .btn{background:var(--navy); color:#fff; border:none; border-radius:7px; padding:13px 18px; font-size:15px; font-weight:bold; cursor:pointer; font-family:inherit;}
+  .btn.secondary{background:#fff; color:var(--navy); border:1px solid var(--navy);}
+  .btn.green{background:var(--green);}
+  .btn:disabled{opacity:.45; cursor:default;}
+  .btnrow{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;}
+  /* classification card */
+  .pill{display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:bold; color:#fff; margin-right:6px;}
+  .sys-People{background:#7d3c98;} .sys-Process{background:#2471a3;} .sys-Quality{background:#0e7c7b;} .sys-Cash{background:#1e7e34;} .sys-Tax{background:#6c757d;}
+  .pri-Emergency{background:var(--red);} .pri-High{background:#d35400;} .pri-Medium{background:var(--amber);} .pri-Low{background:var(--gray);}
+  .fieldgrid{display:grid; grid-template-columns:1fr 1fr; gap:8px 14px; font-size:13px;}
+  .fieldgrid b{color:var(--navy);}
+  /* feed */
+  .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:12px;}
+  .kpi{background:var(--card); border:1px solid var(--line); border-radius:8px; padding:10px 6px; text-align:center;}
+  .kpi .v{font-size:20px; font-weight:bold; color:var(--navy);}
+  .kpi .l{font-size:10px; color:var(--mut); text-transform:uppercase; letter-spacing:.4px; margin-top:2px;}
+  .feeditem{border-left:5px solid var(--navy); background:var(--card); border-top:1px solid var(--line); border-right:1px solid var(--line); border-bottom:1px solid var(--line); border-radius:8px; padding:11px 12px; margin-bottom:10px;}
+  .feeditem .top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px; flex-wrap:wrap;}
+  .feeditem .msg{font-size:13px; margin:7px 0;}
+  .feeditem .meta{font-size:11px; color:var(--mut); line-height:1.5;}
+  .feeditem select{width:auto; padding:6px 8px; font-size:13px;}
+  .empty{text-align:center; color:var(--mut); font-size:13px; padding:30px 10px;}
+  .audio-tag{font-size:11px; color:var(--teal); font-weight:bold;}
+  .hidden{display:none;}
+  nav button{font-size:12px; padding:11px 2px;}
+  .thumb{width:64px; height:64px; object-fit:cover; border-radius:6px; border:1px solid var(--line); vertical-align:middle;}
+  video.thumb{width:96px; height:64px; background:#000;}
+  .thumbwrap{position:relative; display:inline-block; margin:6px 6px 0 0;}
+  .thumbx{position:absolute; top:-6px; right:-6px; background:var(--red); color:#fff; border:none; border-radius:50%; width:20px; height:20px; font-size:11px; cursor:pointer; line-height:1;}
+  .tri{display:flex; gap:6px; margin-top:8px;}
+  .tri button{flex:1; padding:9px 4px; border:1px solid var(--line); border-radius:6px; background:#fff; font-weight:bold; font-family:inherit; cursor:pointer; font-size:13px; color:var(--txt);}
+  .tri .on-pass{background:var(--green); color:#fff; border-color:var(--green);}
+  .tri .on-fail{background:var(--red); color:#fff; border-color:var(--red);}
+  .tri .on-na{background:var(--gray); color:#fff; border-color:var(--gray);}
+  .wtitem{border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin-bottom:10px; background:#fbfcfe;}
+  .wtitem .it{font-size:13px; font-weight:bold; color:var(--navy);}
+  .wtprog{font-size:12px; color:var(--mut); text-align:center; margin:4px 0 10px;}
+  @media (max-width:560px){ .kpis{grid-template-columns:repeat(2,1fr);} .fieldgrid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+<header>
+  <h1>THB OPS VOICE</h1>
+  <span style="font-size:11px; color:#cdd7ea;">Design Your Price - field prototype</span>
+  <span class="draft">DRAFT v0.10</span>
+</header>
+<nav>
+  <button id="tabTbx" class="active" onclick="showTab('tbx')">Toolbox</button>
+  <button id="tabWt" onclick="showTab('wt')">Walkthrough</button>
+  <button id="tabFeed" onclick="showTab('feed')">Feed</button>
+  <button id="tabSetup" onclick="showTab('setup')">Setup</button>
+</nav>
+<main>
+
+<!-- ============ TOOLBOX TAB ============ -->
+<div id="tbx">
+  <div class="card">
+    <h2>Toolbox, on site / off site</h2>
+    <div class="btnrow">
+      <button class="btn" id="tbxBtnStart" type="button" onclick="tbxSetMode('start')">On Site (arrive)</button>
+      <button class="btn secondary" id="tbxBtnEnd" type="button" onclick="tbxSetMode('end')">Off Site (leave)</button>
+    </div>
+  </div>
+
+  <div class="card" id="tbxStartPanel">
+    <h2>On Site, job walk-up</h2>
+    <div class="row">
+      <div>
+        <label>Job</label>
+        <select id="tbxStartJob" required>
+          <option value="" selected disabled>-- select job, required --</option>
+          <option>Carmen John - Addition</option>
+          <option>Monroy - Remodel</option>
+          <option>Natasha - Exterior / Stucco</option>
+          <option>Stewart - Deck</option>
+          <option>Draper - Tile / Brick</option>
+          <option>Office / General</option>
+        </select>
+      </div>
+      <div>
+        <label>Who is reporting</label>
+        <select id="tbxStartWho">
+          <option>Zach</option><option>Tanner</option><option>McKay</option>
+          <option>Crew - Josh</option><option>Crew - Dylan</option><option>Sub (shared link)</option>
+        </select>
+      </div>
+    </div>
+
+    <label>Crew size on this job right now</label>
+    <input type="number" id="tbxCrewSize" min="0" step="1" placeholder="Number of people">
+
+    <label style="margin-top:14px;">What is the highest-risk activity or safety concern on this job right now?</label>
+    <textarea id="tbxSafety" placeholder="Describe the concern, or write None"></textarea>
+    <p style="font-size:11px; color:var(--mut); margin:4px 0 0;">Write None if there is nothing on this job. Be specific, a general answer is worse than no answer.</p>
+
+    <label style="margin-top:14px;">What problems did you see with the build or with sub work?</label>
+    <textarea id="tbxBuildProblems" placeholder="Defects, incomplete work, anything that needs fixing"></textarea>
+    <p style="font-size:11px; color:var(--mut); margin:4px 0 0;">Defects, incomplete work, anything that will need fixing. This is separate from safety on purpose.</p>
+
+    <label style="margin-top:14px;">Site cleanliness score</label>
+    <div class="tri">
+      <button type="button" id="tbxScore1" onclick="tbxSetScore(1)">1</button>
+      <button type="button" id="tbxScore2" onclick="tbxSetScore(2)">2</button>
+      <button type="button" id="tbxScore3" onclick="tbxSetScore(3)">3</button>
+      <button type="button" id="tbxScore4" onclick="tbxSetScore(4)">4</button>
+      <button type="button" id="tbxScore5" onclick="tbxSetScore(5)">5</button>
+    </div>
+    <p style="font-size:11px; color:var(--mut); margin:4px 0 0;">4 or better is the standard. Below 4, say what the correction is and who owns it.</p>
+
+    <label style="margin-top:14px;">Correction needed and who owns it</label>
+    <textarea id="tbxCorrection" placeholder="What needs to change and who is responsible"></textarea>
+
+    <label style="margin-top:14px;">Materials on site and ready?</label>
+    <div class="tri">
+      <button type="button" id="tbxMatYes" onclick="tbxSetMaterials('Yes')">Yes</button>
+      <button type="button" id="tbxMatNo" onclick="tbxSetMaterials('No')">No</button>
+      <button type="button" id="tbxMatNA" onclick="tbxSetMaterials('N/A self supplied')">N/A self supplied</button>
+    </div>
+
+    <label style="margin-top:14px;">Photos and video</label>
+    <div class="fallbacks" style="justify-content:flex-start;">
+      <button class="chip" type="button" onclick="addPhoto('tbxstart')">+ Photo (camera)</button>
+      <button class="chip" type="button" onclick="addVideo('tbxstart')">+ Video (camera)</button>
+    </div>
+    <div id="tbxStartMedia"></div>
+
+    <div class="btnrow">
+      <button class="btn green" id="tbxSubmitStartBtn" type="button" onclick="tbxSubmitStart()">Submit On Site check</button>
+    </div>
+  </div>
+
+  <div class="card hidden" id="tbxEndPanel">
+    <h2>Off Site, leaving the job</h2>
+    <div class="row">
+      <div>
+        <label>Job</label>
+        <select id="tbxEndJob" required>
+          <option value="" selected disabled>-- select job, required --</option>
+          <option>Carmen John - Addition</option>
+          <option>Monroy - Remodel</option>
+          <option>Natasha - Exterior / Stucco</option>
+          <option>Stewart - Deck</option>
+          <option>Draper - Tile / Brick</option>
+          <option>Office / General</option>
+        </select>
+      </div>
+      <div>
+        <label>Who is reporting</label>
+        <select id="tbxEndWho">
+          <option>Zach</option><option>Tanner</option><option>McKay</option>
+          <option>Crew - Josh</option><option>Crew - Dylan</option><option>Sub (shared link)</option>
+        </select>
+      </div>
+    </div>
+
+    <label>What work was completed today?</label>
+    <textarea id="tbxWorkCompleted" placeholder="Summary of the work completed"></textarea>
+
+    <label style="margin-top:14px;">Hours on this job</label>
+    <input type="number" id="tbxHours" min="0" step="0.25" placeholder="e.g. 8.5">
+    <p style="font-size:11px; color:var(--mut); margin:4px 0 0;">This replaces texting hours in. Enter your hours for this job today.</p>
+
+    <label style="margin-top:14px;">Anything that will stop work tomorrow?</label>
+    <textarea id="tbxBlockers" placeholder="Materials, access, weather, a sub, missing direction"></textarea>
+    <p style="font-size:11px; color:var(--mut); margin:4px 0 0;">Materials, access, weather, a sub not showing, missing direction.</p>
+
+    <label style="margin-top:14px;">Was any inspection or paperwork completed today?</label>
+    <textarea id="tbxInspection" placeholder="Name the inspection or paperwork"></textarea>
+    <p style="font-size:11px; color:var(--mut); margin:4px 0 0;">Name it and attach a photo of the paperwork if you have one.</p>
+
+    <label style="margin-top:14px;">Photos</label>
+    <div class="fallbacks" style="justify-content:flex-start;">
+      <button class="chip" type="button" onclick="addPhoto('tbxend')">+ Photo (camera)</button>
+    </div>
+
+    <label style="margin-top:14px;">End of day walkthrough video (optional)</label>
+    <div class="fallbacks" style="justify-content:flex-start;">
+      <button class="chip" type="button" onclick="addVideo('tbxend')">+ Video (camera)</button>
+    </div>
+    <div id="tbxEndMedia"></div>
+
+    <div class="btnrow">
+      <button class="btn green" id="tbxSubmitEndBtn" type="button" onclick="tbxSubmitEnd()">Submit Off Site check</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CAPTURE TAB ============ -->
+<!-- PARKED per 8/4/26 meeting 11:34, returns as its own version. Do not delete: shared media pickers live here. -->
+<div id="report" class="hidden">
+  <div class="card">
+    <h2>1 - Context (auto-captured in production)</h2>
+    <div class="row">
+      <div>
+        <label>Who is reporting</label>
+        <select id="who">
+          <option>Zach</option><option>Tanner</option><option>McKay</option>
+          <option>Crew - Josh</option><option>Crew - Dylan</option><option>Sub (shared link)</option>
+        </select>
+      </div>
+      <div>
+        <label>Job / record you are standing in</label>
+        <select id="job" required>
+          <option value="" selected disabled>-- select job, required --</option>
+          <option>Carmen John - Addition</option>
+          <option>Monroy - Remodel</option>
+          <option>Natasha - Exterior / Stucco</option>
+          <option>Stewart - Deck</option>
+          <option>Draper - Tile / Brick</option>
+          <option>Office / General</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>2 - Tap and talk (situation - impact - required action)</h2>
+    <div class="micwrap">
+      <button class="micbtn" id="mic" type="button">TAP<br>TO TALK</button>
+      <div class="timer" id="timer"></div>
+      <div class="micnote" id="micnote">90-second cap. Say: what happened, what it affects, what you need. Tap again to stop.</div>
+      <div class="fallbacks">
+        <button class="chip" onclick="sample(0)">Sample: change order</button>
+        <button class="chip" onclick="sample(1)">Sample: materials short</button>
+        <button class="chip" onclick="sample(2)">Sample: crew shortage</button>
+        <button class="chip" onclick="typeInstead()">Type instead</button>
+        <button class="chip" onclick="dictate()"><b>Dictate</b> (keyboard mic - no permission)</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="transcriptCard" style="display:none;">
+    <h2>3 - Transcript (edit if needed)</h2>
+    <div id="audioNote" class="audio-tag"></div>
+    <textarea id="transcript" placeholder="Transcript appears here..."></textarea>
+    <div class="fallbacks" style="justify-content:flex-start; margin-top:10px;">
+      <button class="chip" onclick="addPhoto(null)">+ Photo (camera)</button>
+      <button class="chip" onclick="addVideo(null)">+ Video (camera)</button>
+    </div>
+    <div id="mediaStrip"></div>
+    <div class="btnrow">
+      <button class="btn" onclick="runClassify()">Classify &amp; Structure</button>
+      <button class="btn secondary" onclick="resetCapture()">Discard</button>
+    </div>
+  </div>
+
+  <div class="card" id="resultCard" style="display:none;">
+    <h2>4 - Structured task (confirm before submit)</h2>
+    <div id="pills" style="margin-bottom:10px;"></div>
+    <div class="fieldgrid">
+      <div><b>Category</b><br><select id="fCat"></select></div>
+      <div><b>Priority</b><br>
+        <select id="fPri"><option>Emergency</option><option>High</option><option>Medium</option><option>Low</option></select>
+      </div>
+      <div><b>Suggested owner</b><br>
+        <select id="fOwn"><option>Zach</option><option>Tanner</option><option>McKay</option><option>PM + PA queue</option><option>Systems backlog</option></select>
+      </div>
+      <div><b>Due</b><br><input type="text" id="fDue"></div>
+      <div><b>Amount mentioned</b><br><input type="text" id="fAmt" placeholder="none detected"></div>
+      <div><b>Required action</b><br><input type="text" id="fAct"></div>
+    </div>
+    <div class="btnrow">
+      <button class="btn green" onclick="submitItem()">Submit to Ops Feed</button>
+      <button class="btn secondary" onclick="resetCapture()">Start over</button>
+    </div>
+    <p style="font-size:11px; color:var(--mut); margin:10px 0 0;">
+      In production this submit also creates a JobTread to-do/comment on the selected job (Pave API) and, if Emergency, fires an immediate alert.
+    </p>
+  </div>
+</div>
+
+<!-- ============ WALKTHROUGH TAB ============ -->
+<div id="wt" class="hidden">
+  <div class="card">
+    <h2>Walkthrough checklist (visual QC)</h2>
+    <p style="font-size:12px; color:var(--mut); margin:0 0 8px;">
+      Design Your Price Subcontractor Quality Checklist - all 17 trades, Section 1
+      Quality Standard + Section 2 Punchlist. Per the printed form: checklist must be
+      complete and all items addressed or final payment will not be issued. Failed
+      items become assignable queue tasks with photo evidence automatically.
+    </p>
+    <label>Job</label>
+    <select id="wtJob" required>
+      <option value="" selected disabled>-- select job, required --</option>
+      <option>Carmen John - Addition</option>
+      <option>Monroy - Remodel</option>
+      <option>Natasha - Exterior / Stucco</option>
+      <option>Stewart - Deck</option>
+      <option>Draper - Tile / Brick</option>
+    </select>
+    <label>Checklist template</label>
+    <select id="wtTpl"></select>
+    <div class="btnrow"><button class="btn" onclick="wtStart()">Start walkthrough</button></div>
+  </div>
+  <div id="wtList"></div>
+</div>
+
+<input type="file" id="photoIn" accept="image/*" capture="environment" class="hidden">
+<input type="file" id="videoIn" accept="video/*" capture="environment" class="hidden">
+
+<!-- ============ FEED TAB ============ -->
+<div id="feed" class="hidden">
+  <div class="kpis" id="kpis"></div>
+  <div id="feedlist"></div>
+  <div class="btnrow" style="justify-content:center;">
+    <button class="btn secondary" onclick="exportJson()">Export JSON (simulates API push)</button>
+  </div>
+</div>
+
+<!-- ============ SETUP TAB ============ -->
+<div id="setup" class="hidden">
+  <div class="card">
+    <h2>Queue connection (one-time per device)</h2>
+    <label>Webhook URL</label>
+    <input type="text" style="display: none;" id="hookUrl" placeholder="https://hook.us1.make.com/xxxxxxxxxxxx" autocapitalize="off" autocorrect="off">
+    <label style="margin-top:10px;">Include audio in upload (bigger payload, full evidence)</label>
+    <select id="hookAudio"><option value="yes">Yes - attach base64 audio when recorded</option><option value="no">No - transcript only</option></select>
+    <div class="btnrow">
+      <button class="btn" onclick="saveHook()">Save</button>
+      <button class="btn secondary" onclick="testHook()">Send</button>
+    </div>
+    <div id="hookStatus" style="font-size:13px; margin-top:10px; color:var(--mut);"></div>
+  </div>
+</div>
+
+</main>
+<script>
+"use strict";
+const LSKEY = "thb_opsvoice_v02";
+const HOOKKEY = "thb_opsvoice_hook";
+const HOOKAUDIOKEY = "thb_opsvoice_hookaudio";
+const DEFAULT_HOOK_URL = "https://hook.us2.make.com/bcs2panu8bcgxlnrdp3ada72ktwr9dfe";
+const $ = id => document.getElementById(id);
+const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+               (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+/* ---------- taxonomy (mirrors Build Spec section 5) ---------- */
+const TAXONOMY = [
+  { cat:"Emergency / safety",           sys:"People",  own:"Zach",            pri:"Emergency",
+    kw:["hazard","injur","hurt","fire","gas leak","collapse","emergency","unsafe","911"] },
+  { cat:"Change order / T&M discovery", sys:"Cash",    own:"PM + PA queue",   pri:"High",
+    kw:["change order","c.o.","found rot","discovered","behind the wall","extra cost","t&m","upcharge","customer wants to add","requested a change"] },
+  { cat:"Material / delivery issue",    sys:"Process", own:"PM + PA queue",   pri:"High",
+    kw:["material","deliver","short on","ran out","brick tie","screws","order","supplier","pick up","not on site","missing the"] },
+  { cat:"Quality issue",                sys:"Quality", own:"Zach",            pri:"High",
+    kw:["doesn't match","redo","rework","crooked","wrong color","finish","punch","defect","failed inspection","not level","whack"] },
+  { cat:"Customer issue",               sys:"Quality", own:"Tanner",          pri:"High",
+    kw:["customer","client","homeowner","complaint","disput","unhappy","callback"] },
+  { cat:"Cash issue",                   sys:"Cash",    own:"Tanner",          pri:"High",
+    kw:["invoice","payment","past due","late paying","retention","deposit","billing"] },
+  { cat:"People issue",                 sys:"People",  own:"Zach",            pri:"Medium",
+    kw:["short two","no show","short-handed","short handed","crew short","sick","need another guy","staffing","short on guys","installers tomorrow"] },
+  { cat:"Process exception",            sys:"Process", own:"Zach",            pri:"Medium",
+    kw:["permit","inspector","yellow sheet","schedule slip","waiting on","blocked","can't start","delay"] },
+  { cat:"Software issue",               sys:"Process", own:"Tanner",          pri:"Medium",
+    kw:["portal","app","jobtread","button","login","bug","won't load","error"] },
+  { cat:"Improvement idea",             sys:"Process", own:"Systems backlog", pri:"Low",
+    kw:["we should","idea","suggest","what if","checklist for","would be nice","improve"] },
+  { cat:"Operational update",           sys:"Process", own:"Zach",            pri:"Low",
+    kw:["arrived","on site","finished","done with","completed","started","wrapped up"] },
+];
+const CATS = TAXONOMY.map(t=>t.cat);
+
+const SAMPLES = [
+  "The job is finished but the customer requested a change to the back wall. We need a twelve fifty change order approved before the crew returns Monday.",
+  "We're short on brick ties again at Draper. It's an hour and a half round trip to go get them and the crew will sit if we don't have them by noon.",
+  "Heads up, we're short two installers tomorrow at the Monroy remodel. Need to know tonight if we pull Josh off Natasha's or push the sub."
+];
+
+/* ---------- capture: tap-to-toggle state machine ---------- */
+/* states: "idle" | "starting" | "recording" */
+let recState = "idle";
+let mediaRecorder = null, mediaStream = null, chunks = [], audioUrl = null, audioBlob = null;
+let reportPhotos = [], reportVideo = null, mediaTarget = null, wtRun = null;
+let tbxMode = "start";
+let tbxStartPhotos = [], tbxStartVideo = null, tbxEndPhotos = [], tbxEndVideo = null;
+let tbxScore = null, tbxMaterials = null;
+let timerInt = null, secs = 0, recognition = null, stopRequested = false;
+const MAXSEC = 90;
+
+const MIC_OK = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && window.isSecureContext;
+const IN_FRAME = (()=>{ try{ return window.self !== window.top; }catch(e){ return true; } })();
+
+function pickMime(){
+  if(typeof MediaRecorder === "undefined") return null;
+  const candidates = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus", ""];
+  for(const c of candidates){
+    if(c === "" || (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(c))) return c;
+  }
+  return null;
+}
+
+function setMicUI(state){
+  const btn = $("mic");
+  btn.classList.remove("rec","starting","disabled");
+  if(state === "recording"){ btn.classList.add("rec"); btn.innerHTML = "TAP<br>TO STOP"; }
+  else if(state === "starting"){ btn.classList.add("starting"); btn.innerHTML = "STARTING..."; }
+  else if(state === "disabled"){ btn.classList.add("disabled"); btn.innerHTML = "MIC OFF<br>TYPE INSTEAD"; }
+  else { btn.innerHTML = "TAP<br>TO TALK"; }
+}
+
+function micUnavailableExplain(){
+  $("micnote").innerHTML =
+    "<b>Microphone is off in this context.</b> " +
+    (window.isSecureContext
+      ? "This browser does not expose audio recording."
+      : "iPhones and Androids only allow the mic on HTTPS pages, and this file was opened directly (file:// or from Files).") +
+    " Use <b>Type instead</b> or a sample below - everything else works. To enable the mic, open the company's hosted link (ask Jason for the live URL) instead of the file itself.";
+}
+
+async function micTap(){
+  if(!MIC_OK){
+    micUnavailableExplain();
+    setMicUI("disabled");
+    typeInstead();
+    return;
+  }
+  if(recState === "recording"){ stopRec(); return; }
+  if(recState === "starting"){ stopRequested = true; return; } // tapped again mid-permission
+  // start
+  recState = "starting"; stopRequested = false;
+  setMicUI("starting");
+  resetCapture(true);
+  let stream;
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+  }catch(e){
+    recState = "idle"; setMicUI("idle");
+    explainMicError(e);
+    return;
+  }
+  if(stopRequested){ // user tapped again before permission resolved
+    stream.getTracks().forEach(t=>t.stop());
+    recState = "idle"; setMicUI("idle");
+    return;
+  }
+  mediaStream = stream;
+  const mime = pickMime();
+  if(mime === null){
+    stream.getTracks().forEach(t=>t.stop());
+    recState = "idle"; setMicUI("disabled");
+    micUnavailableExplain();
+    typeInstead();
+    return;
+  }
+  try{
+    mediaRecorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+  }catch(e){
+    mediaRecorder = new MediaRecorder(stream); // last resort: browser default
+  }
+  chunks = [];
+  mediaRecorder.ondataavailable = e => { if(e.data && e.data.size) chunks.push(e.data); };
+  mediaRecorder.onstop = () => {
+    if(mediaStream){ mediaStream.getTracks().forEach(t=>t.stop()); mediaStream = null; }
+    const type = mediaRecorder.mimeType || "audio/mp4";
+    const blob = new Blob(chunks, { type });
+    audioBlob = blob;
+    audioUrl = URL.createObjectURL(blob);
+    // PROD: upload `blob` to the STT API here; put the returned text in #transcript
+    $("audioNote").textContent = "Audio captured ("+secs+"s) - retained as evidence. ";
+    const a = document.createElement("audio");
+    a.controls = true; a.src = audioUrl; a.style.width = "100%"; a.style.marginTop = "6px";
+    $("audioNote").appendChild(a);
+    finishCapture();
+  };
+  // live transcription: desktop/Android only - it fights MediaRecorder on iOS
+  if(!IS_IOS && (window.SpeechRecognition || window.webkitSpeechRecognition)){
+    try{
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SR();
+      recognition.continuous = true; recognition.interimResults = true; recognition.lang = "en-US";
+      let finalTxt = "";
+      recognition.onresult = e => {
+        let interim = "";
+        for(let i = e.resultIndex; i < e.results.length; i++){
+          if(e.results[i].isFinal) finalTxt += e.results[i][0].transcript + " ";
+          else interim += e.results[i][0].transcript;
+        }
+        $("transcript").value = (finalTxt + interim).trim();
+      };
+      recognition.onerror = () => {}; // non-fatal; typed fallback covers it
+      recognition.start();
+    }catch(e){ recognition = null; }
+  }
+  mediaRecorder.start(1000); // timeslice so chunks flush even if stop misbehaves
+  recState = "recording";
+  setMicUI("recording");
+  secs = 0; $("timer").textContent = "0:00";
+  timerInt = setInterval(()=>{
+    secs++;
+    $("timer").textContent = Math.floor(secs/60)+":"+String(secs%60).padStart(2,"0");
+    if(secs >= MAXSEC) stopRec();
+  }, 1000);
+}
+
+function stopRec(){
+  if(recState !== "recording"){ return; }
+  recState = "idle";
+  clearInterval(timerInt);
+  $("timer").textContent = "";
+  setMicUI("idle");
+  if(recognition){ try{ recognition.stop(); }catch(e){} recognition = null; }
+  if(mediaRecorder && mediaRecorder.state !== "inactive"){
+    try{ mediaRecorder.stop(); } // finishCapture() runs from onstop
+    catch(e){ finishCapture(); }
+  } else {
+    finishCapture();
+  }
+}
+
+function finishCapture(){
+  if(secs < 1 && !$("transcript").value.trim()){ return; } // ignore accidental blips
+  $("transcriptCard").style.display = "block";
+  if(!$("transcript").value.trim()){
+    $("transcript").placeholder = IS_IOS
+      ? "Type what you said (live transcription is skipped on iPhone - production transcribes the audio file automatically)."
+      : "Live transcription was not available - type what you said. (Production uses the STT API on the audio file.)";
+  }
+  $("transcriptCard").scrollIntoView({ behavior:"smooth" });
+}
+
+const mic = $("mic");
+mic.addEventListener("click", micTap);
+mic.addEventListener("contextmenu", e => e.preventDefault());
+mic.addEventListener("selectstart", e => e.preventDefault());
+if(!MIC_OK){ setMicUI("disabled"); micUnavailableExplain(); }
+else if(IN_FRAME){ $("micnote").innerHTML = "90-second cap. Say: what happened, what it affects, what you need. Tap again to stop.<br><b>Heads up:</b> this link is showing the page inside the host's wrapper frame. If the mic says blocked without asking, that frame is why - use <b>Dictate (keyboard mic)</b> below, or move to a host that serves the page directly with no wrapper frame."; }
+
+
+function explainMicError(e){
+  const name = (e && e.name) || "";
+  let msg;
+  if(IN_FRAME && (name === "NotAllowedError" || name === "SecurityError")){
+    msg = "<b>The host is blocking the mic, not your phone.</b> This page is running inside the host's wrapper frame (free tiers like tiiny do this), and iPhones will not pass microphone permission through a frame - it reports blocked without ever asking you. Fix: move to a host that serves the page directly with no wrapper frame (the GoHighLevel custom HTML page in Build Spec v0.3 does). Or skip the whole issue with <b>Dictate (keyboard mic)</b> below - it needs no permission at all.";
+  } else if(name === "NotAllowedError" || name === "SecurityError"){
+    msg = "<b>Mic permission is denied for this site.</b> On iPhone: tap the <b>aA</b> icon in Safari's address bar &gt; Website Settings &gt; Microphone &gt; Allow, then reload. If Safari never asks at all: Settings app &gt; Apps &gt; Safari &gt; Microphone. Or use <b>Dictate (keyboard mic)</b> below - no permission needed.";
+  } else if(name === "NotFoundError" || name === "OverconstrainedError"){
+    msg = "<b>No microphone available</b> in this browser context. Use <b>Dictate</b> or Type instead.";
+  } else {
+    msg = "<b>Mic failed to start</b> ("+(name||"unknown")+"). Use <b>Dictate (keyboard mic)</b> below - it works everywhere with zero permissions.";
+  }
+  $("micnote").innerHTML = msg;
+}
+
+function dictate(){
+  if(recState === "recording") stopRec();
+  resetCapture(true);
+  $("audioNote").textContent = "Dictation mode - voice via the phone keyboard, no app permission needed.";
+  $("transcriptCard").style.display = "block";
+  const ta = $("transcript");
+  ta.placeholder = "Tap in this box, then tap the microphone key on your keyboard and just talk. Tap Done when finished.";
+  ta.focus();
+  $("transcriptCard").scrollIntoView({ behavior:"smooth" });
+}
+
+function sample(i){
+  if(recState === "recording") stopRec();
+  resetCapture(true);
+  $("transcript").value = SAMPLES[i];
+  $("audioNote").textContent = "Sample transcript loaded (no audio - demo mode).";
+  $("transcriptCard").style.display = "block";
+  $("transcriptCard").scrollIntoView({ behavior:"smooth" });
+}
+function typeInstead(){
+  if(recState === "recording") stopRec();
+  resetCapture(true);
+  $("audioNote").textContent = "Typed entry (no audio).";
+  $("transcriptCard").style.display = "block";
+  $("transcript").focus();
+}
+function resetCapture(keepHidden){
+  $("transcript").value = ""; $("audioNote").textContent = "";
+  audioUrl = null; audioBlob = null;
+  reportPhotos = []; reportVideo = null; renderMediaStrip();
+  $("transcriptCard").style.display = "none";
+  $("resultCard").style.display = "none";
+  if(!keepHidden){ window.scrollTo({ top:0, behavior:"smooth" }); }
+}
+
+/* ---------- media capture via native camera (no permissions needed) ---------- */
+function compressPhoto(file){
+  return new Promise(res => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, 900 / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(img.src);
+      res(c.toDataURL("image/jpeg", 0.65));
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+function addPhoto(wtIdx){ mediaTarget = (wtIdx === null ? null : wtIdx); $("photoIn").click(); }
+function addVideo(wtIdx){ mediaTarget = (wtIdx === null ? null : wtIdx); $("videoIn").click(); }
+
+$("photoIn").addEventListener("change", async e => {
+  const file = e.target.files[0]; e.target.value = "";
+  if(!file) return;
+  const data = await compressPhoto(file);
+  if(mediaTarget === "tbxstart"){ tbxStartPhotos.push(data); renderTbxStartMedia(); }
+  else if(mediaTarget === "tbxend"){ tbxEndPhotos.push(data); renderTbxEndMedia(); }
+  else if(mediaTarget !== null && wtRun){ wtRun.items[mediaTarget].photos.push(data); renderWt(); }
+  else { reportPhotos.push(data); renderMediaStrip(); if($("transcriptCard").style.display==="none"){ typeInstead(); renderMediaStrip(); } }
+  mediaTarget = null;
+});
+$("videoIn").addEventListener("change", e => {
+  const file = e.target.files[0]; e.target.value = "";
+  if(!file) return;
+  const url = URL.createObjectURL(file);
+  // PROD: upload the video file to cloud storage (presigned URL), put the link in the queue row
+  if(mediaTarget === "tbxstart"){ tbxStartVideo = url; renderTbxStartMedia(); }
+  else if(mediaTarget === "tbxend"){ tbxEndVideo = url; renderTbxEndMedia(); }
+  else if(mediaTarget !== null && wtRun){ wtRun.items[mediaTarget].video = url; renderWt(); }
+  else { reportVideo = url; renderMediaStrip(); if($("transcriptCard").style.display==="none"){ typeInstead(); renderMediaStrip(); } }
+  mediaTarget = null;
+});
+function renderMediaStrip(){
+  const el = $("mediaStrip"); if(!el) return;
+  el.innerHTML =
+    reportPhotos.map((p,ix)=>'<span class="thumbwrap"><img class="thumb" src="'+p+'"><button class="thumbx" onclick="reportPhotos.splice('+ix+',1);renderMediaStrip()">x</button></span>').join("") +
+    (reportVideo ? '<span class="thumbwrap"><video class="thumb" src="'+reportVideo+'" controls></video><button class="thumbx" onclick="reportVideo=null;renderMediaStrip()">x</button></span>' : "");
+}
+
+/* ---------- walkthrough checklists ----------
+   Subcontractor Quality Checklist - Design Your Price - all 17 trades,
+   transcribed from the printed form (Section 1 Quality Standard +
+   Section 2 Punchlist + Inspections Needed + defects question +
+   signature block). Per the form: checklist must be complete and all
+   items addressed or final payment will not be issued.
+   The two Field Ops walks remain as DEMO daily-ops templates. */
+const S1 = "Section 1 - Basic Scope Expectations (Quality Standard)";
+const S2 = "Section 2 - Punchlist (Required Prior to Final Payment)";
+const WT_LIST = [
+{ name:"DEMOLITION", group:"Subcontractor QC", inspections:["Demolition (If Needed)","Other","Other","Other"], sections:[
+ { title:S1, items:[
+  "All designated materials and assemblies are fully removed per scope (flooring, drywall, framing, fixtures, etc.)",
+  "Floor areas are cleared to proper substrate where finishes were removed (no remaining wood, tile, thinset, or mud where new finishes will be installed)",
+  "All nails, screws, and fasteners are removed or properly set from exposed framing",
+  "All demolition areas are clean and properly prepped for next phase (ready for framing, MEP, or finishes)",
+  "Corners and transitions are cleaned out and ready for new drywall or finishes",
+  "All insulation is fully removed where required (including complete removal of loose fill insulation)",
+  "All existing systems (ductwork, plumbing, electrical) are removed as required by scope",
+  "All framing designated for removal is fully removed per scope",
+  "Doors, windows, and fixtures designated for removal are fully removed and disposed of",
+  "Work is performed without unnecessary damage to adjacent areas or surfaces" ]},
+ { title:S2, items:[
+  "All debris is removed from interior and exterior (no leftover demo material anywhere on site)",
+  "Interior areas are swept and cleaned (no dust piles, scraps, or loose material)",
+  "Exterior perimeter is clean and free of debris",
+  "No remaining fasteners, sharp objects, or hazards left behind",
+  "No partial demo or missed areas (everything in scope is fully removed)",
+  "All demo'd areas are fully ready for the next trade (no additional prep required)",
+  "No damage to surrounding finishes, structures, or items not included in demo scope" ]}]},
+{ name:"CONCRETE", group:"Subcontractor QC", inspections:["Soil/Compaction","Footing/Ufer, Rebar/Steel","Epoxy/Anchors, Concrete PSI, Vibration","Other"], sections:[
+ { title:S1, items:[
+  "All work matches plans, approved layout, and agreed scope prior to pour",
+  "Forms are straight, square, level, and set to correct finished dimensions",
+  "Subgrade and base (including gravel where applicable) are properly compacted and stable",
+  "Layout is verified for accuracy, dimensions, and squareness prior to placement",
+  "All structural components (footings, rebar, anchor bolts, embeds) are installed per plans and correctly located",
+  "Concrete mix and specifications (PSI, etc.) match project requirements",
+  "All openings, depressions, and special conditions (door thresholds, sunken areas, etc.) are accounted for prior to pour (verify with plans and GC)",
+  "All sleeves, penetrations, and embedded items (plumbing, electrical, irrigation, etc.) are installed and clearly located prior to pour",
+  "Finished surfaces are flat, properly sloped where required, and consistent across all areas",
+  "All visible edges, steps, and transitions are straight and clean (no irregular or wavy finishes)",
+  "Work is performed without damage to surrounding areas or adjacent finishes" ]},
+ { title:S2, items:[
+  "All required inspections are completed and passed",
+  "No missed items requiring cutting, coring, or correction after pour",
+  "No low/high spots or improper slope affecting drainage or finishes",
+  "No excessive cracking, chipping, or surface defects",
+  "Anchor bolts, embeds, and key locations align with framing and layout requirements",
+  "No concrete splatter, staining, or damage to walls, windows, or adjacent surfaces",
+  "Control joints are clean, consistent, and properly executed",
+  "Work area is fully cleaned (no debris, form material, or leftover concrete)" ]}]},
+{ name:"FRAMING", group:"Subcontractor QC", inspections:["Rough framing and/or shear nail","Post-installed anchor bolts and/or epoxy - special inspection MUST happen DURING install; contact PM at least 24 hours prior","Structural Steel (if needed)","Other"], sections:[
+ { title:S1, items:[
+  "All framing is installed per plans, layout, and agreed scope",
+  "The correct lumber is used, as called for in the plans or outlined by project manager",
+  "Walls, ceilings, and rooflines are straight, plumb, level, and aligned (no bows, waves, or irregular lines)",
+  "All openings (windows, doors, garage doors, pocket doors) are correctly sized and located per plans or GC direction",
+  "All openings are square, level, and plumb to allow proper drywall, trim, and door/window installation",
+  "All headers, beams, and structural components are installed per plans and properly supported",
+  "All required hardware, ties, straps, anchors, bolts, hangers, and connectors are installed per plans",
+  "Any post-installed anchors or epoxy anchors requiring special inspection are coordinated and inspected during installation",
+  "Stud layout and framing alignment support clean drywall and finish installation (no uneven planes or offsets)",
+  "All required backing/blocking is installed (cabinets, vanities, shower glass, handrails, etc.)",
+  "HVAC openings (registers and returns) are fully framed/boxed and properly aligned",
+  "Framing is coordinated with plumbing, electrical, and HVAC to avoid conflicts or rework",
+  "All framing members are properly fastened, secure, and free of damage or overcutting",
+  "Work is performed in a way that will not create visible issues in drywall, cabinets, tile, or finish work" ]},
+ { title:S2, items:[
+  "No bowed, twisted, or out-of-plane walls or ceilings",
+  "No framing misalignment causing issues for drywall, cabinets, tile, or trim",
+  "All openings are straight, square, and consistent (no racking, uneven reveals, or prep required by other trades)",
+  "No missing or improperly placed backing/blocking",
+  "No missing hardware, connectors, or structural components required by plans",
+  "No MEP conflicts requiring cutting, relocation, or modification after framing",
+  "No damaged, split, or compromised framing members left in place",
+  "Rooflines and exterior walls are straight and ready for clean exterior finishes (stucco, siding, etc.)",
+  "Work area is clean and free of debris, scrap material, and leftover fasteners" ]}]},
+{ name:"ROOFING", group:"Subcontractor QC", inspections:["Underlayment/Dry-in","Other"], sections:[
+ { title:S1, items:[
+  "All work matches plans, specifications, and agreed scope",
+  "Roof deck is properly prepared, secure, and suitable for roofing installation",
+  "If roof sheathing is deteriorated or needs replacement, inform Project Manager immediately",
+  "Underlayment is properly installed, lapped, and continuous with no exposed areas",
+  "All flashing (roof-to-wall, valleys, penetrations, edges) is properly installed and integrated",
+  "All roof penetrations (vents, pipes, flues, etc.) are properly flashed and sealed",
+  "Roofing materials are installed straight, aligned, and consistent across all roof planes",
+  "All ridges, hips, and edges are clean, straight, and properly finished",
+  "Roof slope and drainage are correct with no areas that will hold standing water",
+  "Roofing is properly integrated with adjacent materials (stucco, siding, fascia, etc.)",
+  "Installation is coordinated with HVAC, plumbing, and other penetrations",
+  "No exposed fasteners or improperly sealed areas",
+  "Work is performed without damage to roofing materials or surrounding surfaces" ]},
+ { title:S2, items:[
+  "No visible damage to roofing materials (cracked tiles, torn shingles, damaged underlayment, etc.)",
+  "No missing, loose, or misaligned roofing materials",
+  "All flashing is complete, tight, and properly installed (no gaps or exposed areas)",
+  "All penetrations are fully sealed and watertight",
+  "No exposed fasteners unless specifically required and properly sealed",
+  "No areas that will pond or hold water",
+  "All roof lines (ridges, hips, edges) are straight and visually consistent",
+  "No debris, loose materials, or exposed underlayment left on roof",
+  "All surrounding areas are clean and free of nails, debris, or roofing materials",
+  "No conditions exist that will result in leaks or require rework" ]}]},
+{ name:"WINDOWS / EXTERIOR DOORS", group:"Subcontractor QC", inspections:["Other","Other"], sections:[
+ { title:S1, items:[
+  "All windows and doors are installed per plans, layout, and agreed scope",
+  "All openings are properly prepared and flashed prior to installation",
+  "Retrofit windows seamlessly integrate with existing interior and exterior finishes unless otherwise specified",
+  "All windows and doors are level, plumb, square, and properly aligned within openings",
+  "Units are installed to manufacturer specifications (fastening, shimming, spacing, and support)",
+  "All units operate smoothly and correctly (open, close, lock, latch)",
+  "All units are properly sealed, weather-tight, and air-tight",
+  "Flashing, sealants, and transitions are properly installed and integrated with surrounding weather barrier (WRB)",
+  "Door thresholds are level and properly set for finished floor conditions (verify with GC if unclear)",
+  "All required components are installed (screens, hardware, locks, keys, etc.)",
+  "All exterior penetrations and joints are properly sealed to prevent water intrusion",
+  "Installation is coordinated with exterior finish system (stucco, siding, etc.) to ensure proper integration",
+  "Work is performed without damage to windows, glass, frames, or surrounding finishes" ]},
+ { title:S2, items:[
+  "No units out of level, plumb, or square",
+  "No binding, sticking, or improper operation of windows or doors",
+  "No air gaps, water intrusion points, or incomplete sealing",
+  "No missing flashing, improper laps, or exposed areas",
+  "No visible gaps at frames, thresholds, or transitions",
+  "No damage to glass, frames, hardware, or finishes",
+  "No excessive or messy caulking (all sealant lines clean and controlled)",
+  "No leftover debris, or installation residue on units",
+  "All surrounding surfaces are clean and free of caulk, foam, or damage. All job debris is clean and removed." ]}]},
+{ name:"STUCCO", group:"Subcontractor QC", inspections:["Paper & Lath","Other"], sections:[
+ { title:S1, items:[
+  "All work matches plans, approved layout, and agreed scope",
+  "Lath is properly installed, tight, and securely fastened (no loose or sagging areas)",
+  "Control joints are installed in correct locations and align cleanly with architectural lines (per plans or GC direction)",
+  "Weep screed is installed at all required locations with proper clearance above grade and clean, tight corners",
+  "Weather barrier (WRB/paper) is properly installed, lapped, and integrated (no tears, reverse laps, or exposed areas)",
+  "Corners, edges, and terminations are straight, clean, and properly formed (no waviness or irregular lines)",
+  "Stucco thickness is consistent across all surfaces (no thin areas, buildup, or exposed lath)",
+  "Openings (windows, doors, vents, etc.) are straight, square, and properly formed for clean finish installation",
+  "All penetrations are properly accounted for, exposed, and sealed",
+  "All transitions to other materials (stone, siding, trim, etc.) are clean and properly detailed",
+  "Installation is coordinated with windows, doors, and adjacent systems to ensure proper drainage and integration",
+  "Work is performed without damage to windows, doors, glass, or surrounding finishes" ]},
+ { title:S2, items:[
+  "Finish coat texture is consistent across all elevations (no patchiness or mismatch)",
+  "No visible cracking, separation, or hollow-sounding areas",
+  "Walls are straight and visually consistent (no waves, bows, or uneven planes)",
+  "All reveals at windows, doors, and penetrations are even, clean, and consistent",
+  "No messy or excessive stucco at edges, terminations, or openings",
+  "No gaps, exposed areas, or improperly sealed penetrations",
+  "No staining, splatter, or damage to adjacent surfaces (windows, doors, concrete, etc.)",
+  "All surfaces are clean and ready for final appearance (no residue, dust, or material buildup)",
+  "Work area is fully cleaned (no leftover materials, sand, cement, or debris)" ]}]},
+{ name:"EXTERIOR CLADDING (Siding / Board & Batten / Panel / Shake)", group:"Subcontractor QC", inspections:["WRB/Dry-in","Other"], sections:[
+ { title:S1, items:[
+  "All work matches plans, approved elevations, and agreed scope",
+  "Weather barrier (WRB) is properly installed, lapped, and integrated (no tears, reverse laps, or exposed areas)",
+  "All windows, doors, and penetrations are properly flashed and integrated with WRB prior to cladding install",
+  "All siding/cladding is installed straight, level, and aligned with consistent layout and spacing",
+  "Courses, joints, and reveals are consistent across all elevations",
+  "All materials are installed per manufacturer specifications (fastening, spacing, clearances, etc.)",
+  "Proper clearances are maintained at grade, roofs, decks, and horizontal surfaces",
+  "All transitions and terminations (corners, trim, soffits, fascia, etc.) are clean and properly detailed",
+  "All joints, seams, and connections are properly sealed where required",
+  "All penetrations (vents, outlets, fixtures, hose bibbs, etc.) are properly cut, flashed, and sealed",
+  "Installation is coordinated with windows, doors, roofing, and adjacent systems to ensure proper water shedding",
+  "Work is performed without damage to materials or surrounding finishes" ]},
+ { title:S2, items:[
+  "All siding/cladding runs straight and true (no waviness, sagging, or uneven lines)",
+  "No inconsistent spacing, crooked courses, or misaligned joints",
+  "No visible gaps, improper overlaps, or exposed edges",
+  "No missing or improperly sealed joints, seams, or penetrations",
+  "No damage to siding materials (chips, cracks, splits, or visible defects)",
+  "No exposed fasteners where not intended or inconsistent fastening patterns",
+  "All trim, corners, and transitions are straight, tight, and visually consistent",
+  "No staining, caulk smearing, or visible install marks on finished surfaces",
+  "No water entry points or improper flashing details at windows, doors, or penetrations",
+  "Work area is fully cleaned (no debris, scraps, nails, or material left behind)" ]}]},
+{ name:"HVAC", group:"Subcontractor QC", inspections:["Rough HVAC","Other"], sections:[
+ { title:S1, items:[
+  "All work matches plans, equipment specs, and agreed scope",
+  "All HVAC units and equipment are installed in correct locations and properly supported",
+  "All boots, plenums, returns, and duct runs are installed in correct locations per layout",
+  "All registers, returns, and grilles are aligned, square, and consistently located relative to walls, ceilings, and cabinets",
+  "Ductwork is properly routed, supported, and secured (no kinks, sags, or restrictions)",
+  "System layout is coordinated with framing, lighting, and other trades (no conflicts with fixtures, fans, or structure)",
+  "All required ventilation systems are installed and properly routed (bath fans, kitchen hood, makeup air if required)",
+  "Kitchen hood ducting is properly sized and installed per appliance specifications",
+  "All penetrations through framing, walls, and roof are properly sealed and protected",
+  "All required clearances and spacing are maintained",
+  "System is installed per manufacturer specifications and applicable codes",
+  "Work is performed without damage to surrounding framing or finishes" ]},
+ { title:S2, items:[
+  "No misaligned or crooked registers, returns, or grilles",
+  "No conflicts with lights, ceiling fans, cabinets, or other fixtures",
+  "No sagging, kinked, or poorly supported ductwork",
+  "No missing or improperly installed vents (bath fans, hood, makeup air, etc.)",
+  "No excessive noise, airflow restriction, or obvious performance issues",
+  "All penetrations are properly sealed (no visible gaps at walls, ceilings, or roof)",
+  "All grilles and registers are installed flush, clean, and undamaged",
+  "No debris, dust, or construction material left in ducts or registers",
+  "Work area is fully cleaned (no scrap material, fasteners, or debris left behind)" ]}]},
+{ name:"PLUMBING", group:"Subcontractor QC", inspections:["Water/sewer/soil/copper","Water Meter","Rough Plumbing","Gas Piping/Pressure Test"], sections:[
+ { title:"Underground - "+S1, items:[
+  "All work matches plans, approved layout, and agreed scope",
+  "Water supply, sewer, and gas systems are sized and installed per plans and requirements",
+  "All underground piping is properly located, sloped, and aligned for intended fixtures",
+  "All fixture locations (islands, bathrooms, tubs, etc.) are verified and coordinated prior to installation",
+  "All plumbing stubs are installed in correct locations and within wall/floor cavities (no interference with framing, drywall, or finishes)",
+  "All required stubs (water, waste, gas, island vents, etc.) are accounted for and properly located",
+  "All rough stubs are protected, wrapped, or boxed where required",
+  "Special fixtures (freestanding tubs, island sinks, etc.) are accounted for and properly located",
+  "Work is coordinated with GC and other trades to avoid conflicts or relocation later",
+  "All work is installed per code, plans, and applicable standards" ]},
+ { title:"Underground - "+S2, items:[
+  "No misplaced or incorrectly located stubs requiring relocation",
+  "No stubs protruding outside wall plane or interfering with drywall or finishes",
+  "No missing stubs for fixtures, islands, or exterior locations",
+  "No slope issues or layout errors affecting drainage",
+  "All stubs are protected and ready for next phase",
+  "No conflicts with framing, slab, or other systems",
+  "Work area is clean and free of debris or leftover materials" ]},
+ { title:"Above Ground - "+S1, items:[
+  "All work matches plans, approved layout, and agreed scope",
+  "All water, waste, vent, and gas lines are properly installed, supported, and secured",
+  "All fixture locations (valves, heads, spouts, supplies) are installed at correct height and position per plans or GC direction",
+  "All plumbing components are coordinated with framing, cabinetry, tile, and finishes (e.g. toilet stubs do not interfere with baseboards)",
+  "All lines are properly supported within walls and ceilings (no movement or flex)",
+  "Nail plates are installed where required",
+  "All penetrations are properly sealed (fire caulked or foamed where required)",
+  "All venting is installed and properly routed",
+  "Gas lines are properly sized and installed for intended fixtures (no undersized or improper materials causing performance issues)",
+  "All required specialty items are installed where applicable (recirc lines, softener loops, appliance connections, etc.)",
+  "Appliance and fixture connections (fridge, tubs, showers, etc.) are installed in correct locations per specs",
+  "Tubs and fixtures are properly set and supported per manufacturer requirements",
+  "Work is installed per code, plans, and applicable standards" ]},
+ { title:"Above Ground - "+S2, items:[
+  "No incorrectly located valves, stubs, or fixtures requiring adjustment after finishes",
+  "No plumbing interfering with drywall, cabinets, tile, or trim (including baseboards and enclosures)",
+  "No loose or unsupported pipes, valves, or fixtures",
+  "No missing connections or required components (recirc, softener loop, gas stubs, etc.)",
+  "No gas line sizing or material issues affecting performance (e.g. whistling or restriction)",
+  "All fixtures are installed correctly and function as intended (hot/cold orientation, alignment, secure mounting)",
+  "No visible gaps at penetrations or unfinished sealing",
+  "No damage to surrounding surfaces or finishes",
+  "Work area is clean and free of debris or leftover materials" ]}]},
+{ name:"ELECTRICAL", group:"Subcontractor QC", inspections:["Footing/Ufer","Temp Power","Rough Electrical","Other"], sections:[
+ { title:S1, items:[
+  "All work matches plans, approved layout, and agreed scope",
+  "Panel size, breakers, and circuits match plans and load requirements",
+  "Panels are properly labeled and clearly identified",
+  "All outlets, switches, lighting, and electrical components are installed in correct locations per plans or GC direction",
+  "Appliance, island, and specialty locations are verified against appliance specs and layout prior to installation",
+  "All boxes are installed straight, level, securely supported, and set to correct depth for finished surfaces",
+  "All recessed lights are laid out straight, evenly spaced, and aligned with walls, cabinets, and key features",
+  "All wiring is properly routed, protected, and secured (including nail plates where required)",
+  "All required systems are installed (low voltage, lighting, floor outlets, fireplace wiring, etc.)",
+  "All required grounding and bonding is installed (including water/gas bonds and ufer where required)",
+  "All penetrations through framing are properly sealed (fire caulked or foamed where required)",
+  "All rough-in wiring for future fixtures or features is properly located and accounted for",
+  "All work is coordinated with framing, cabinetry, tile, and other trades to avoid conflicts",
+  "Work is installed per code, plans, and applicable standards" ]},
+ { title:S2, items:[
+  "No misaligned outlets, switches, or fixtures (all are straight, level, and consistently positioned)",
+  "All recessed lights are perfectly straight, evenly spaced, and visually aligned",
+  "No boxes set too deep or proud of finished surfaces (including backsplash areas requiring adjustable boxes)",
+  "All outlets, switches, and cover plates are flush, level, and cleanly installed (aligned screws where visible)",
+  "All recessed light trims are flush to ceiling and consistent in color temperature",
+  "No missing wiring or unaccounted-for future connections behind drywall",
+  "No electrical conflicts with cabinets, tile, appliances, or trim",
+  "All floor outlets and specialty locations are properly installed and finished",
+  "No exposed wires, unfinished penetrations, or incomplete sealing",
+  "All components function properly and are ready for use",
+  "Work area is clean and free of debris, scrap wire, and leftover materials" ]}]},
+{ name:"INSULATION", group:"Subcontractor QC", inspections:["Other","Other"], sections:[
+ { title:S1, items:[
+  "All insulation is installed per plans, specifications, and agreed scope",
+  "Correct insulation type and R-value are installed in all required locations",
+  "All wall, ceiling, and roof cavities are fully and consistently insulated (no gaps, voids, or missed areas)",
+  "Insulation is installed properly within framing and will not interfere with drywall or finishes",
+  "Spray foam is properly applied and trimmed flush where required to allow proper drywall installation",
+  "Vapor barrier is installed where required and properly integrated",
+  "All required sound insulation is installed per plans or scope",
+  "Insulation does not block or restrict roof, attic, or eave ventilation",
+  "Windows, doors, and penetrations are properly sealed or insulated where required",
+  "Installation is coordinated with other trades to ensure all areas are accessible and complete prior to close-up",
+  "Work is installed per code, plans, and applicable standards" ]},
+ { title:S2, items:[
+  "No missing insulation in any required areas (walls, ceilings, or transitions)",
+  "No insulation protruding past framing that will interfere with drywall",
+  "No gaps, voids, or compressed areas reducing effectiveness",
+  "No blocked vents, soffits, or airflow paths",
+  "Spray foam is properly trimmed and does not affect finishes",
+  "No incorrect insulation type or R-value in any area",
+  "All windows, doors, and penetrations are properly sealed",
+  "Work area is clean and free of debris, excess material, or overspray" ]}]},
+{ name:"DRYWALL", group:"Subcontractor QC", inspections:["Nail/Screw","Other"], sections:[
+ { title:S1, items:[
+  "All drywall is installed per plans, specifications, and agreed scope",
+  "Correct drywall type and thickness are used in all required areas (including fire-rated and wet areas)",
+  "Cement board or tile backer is installed where required",
+  "All fixture, switch, and outlet boxes are properly cut out and accessible",
+  "All wiring (electrical, low voltage, thermostat, etc.) is properly located and accessible",
+  "All boards are installed flat and aligned (no bulging, sagging, or uneven planes)",
+  "Joints are properly taped, finished, and blended for required finish level",
+  "All surfaces are properly sanded and prepared for paint per specified finish level",
+  "Skim coat (if applicable) is properly applied and sanded without interfering with trim, baseboards, or finishes",
+  "Corners, returns, and openings (windows, doors, niches) are straight, square, plumb, and tight",
+  "Control joints are installed where required",
+  "Work is coordinated with framing, MEP, and finishes to ensure proper alignment and fit",
+  "Floors and surrounding surfaces are properly protected during installation" ]},
+ { title:S2, items:[
+  "No visible seams, joints, or imperfections that will show through paint (including in direct light)",
+  "No uneven or wavy wall or ceiling surfaces",
+  "No buildup at joints, corners, or transitions affecting trim or finishes",
+  "No missed sanding, rough areas, or dust left on surfaces",
+  "No gaps or irregularities at windows, doors, or returns",
+  "All closets, bathrooms, and small areas are finished to same quality as main areas",
+  "No drywall interfering with electrical boxes, fixtures, or trim installation",
+  "No damage to floors, windows, doors, or surrounding surfaces",
+  "All surfaces are clean and free of drywall mud, dust, and debris",
+  "Work area is fully cleaned and ready for next trade" ]}]},
+{ name:"FLOORING", group:"Subcontractor QC", inspections:["Other","Other"], sections:[
+ { title:S1, items:[
+  "All flooring is installed per plans, layout, and agreed scope",
+  "Substrate is properly prepared, flat, clean, and suitable for flooring installation",
+  "Flooring is installed flat and consistent (no deflection, soft spots, or uneven areas)",
+  "If leveling is needed, inform GC or Project Manager immediately and prior to installation",
+  "Layout is straight, aligned with the space, and visually consistent (no drifting or tapering)",
+  "Joints, seams, or plank alignment are consistent and properly spaced",
+  "Transitions between flooring and adjacent materials (tile, cabinets, walls, etc.) are clean and properly detailed",
+  "Perimeter gaps and expansion requirements are properly maintained where required",
+  "Cuts at walls, cabinets, and penetrations are clean and properly located",
+  "Flooring installation is coordinated with cabinets, doors, and trim for proper fit and finish",
+  "All materials are installed per manufacturer specifications",
+  "Work is performed without damage to flooring or surrounding surfaces" ]},
+ { title:S2, items:[
+  "No soft spots, deflection, or uneven areas in flooring",
+  "No visible gaps, lippage, or inconsistent joints/seams",
+  "No drifting, tapering, or misaligned layout",
+  "No damage to flooring (scratches, chips, dents, or defects)",
+  "All cuts are clean and properly concealed by baseboards, trim, or transitions",
+  "All transitions are straight, secure, and visually consistent",
+  "No improper spacing at walls or missing expansion gaps where required",
+  "No interference with doors, cabinets, appliances, or trim",
+  "Flooring is clean and free of dust, adhesive, residue, or installation marks",
+  "No conditions exist that will require removal, repair, or adjustment after proceeding" ]}]},
+{ name:"CABINETRY", group:"Subcontractor QC", inspections:["Other","Other"], sections:[
+ { title:S1, items:[
+  "All cabinets are installed per approved layout, plans, and agreed scope",
+  "All cabinets are level, plumb, and properly aligned across all runs",
+  "Cabinets are securely fastened and properly joined (no gaps between boxes)",
+  "All cabinet elevations and layout align with adjacent finishes (floors, walls, ceilings, and appliances)",
+  "All doors, drawers, and panels are installed straight, square, and properly spaced",
+  "All hardware (hinges, slides, pulls, etc.) is installed per plan and functions properly",
+  "All doors and drawers open, close, and align correctly",
+  "All filler pieces, scribes, panels, and trim are properly installed and fit cleanly to surrounding surfaces",
+  "All crown molding and trim are straight, tight, and properly aligned",
+  "All required backing and support is in place for wall-hung or floating cabinets and shelves",
+  "All built-in accessories (pull-outs, inserts, trash systems, etc.) are installed per plan",
+  "Cabinet installation is coordinated with electrical, plumbing, and lighting (no covered wires or conflicts)",
+  "All cabinets are installed ready for countertop installation (including proper support and layout)",
+  "Work is performed without damage to materials, finishes, or surrounding surfaces" ]},
+ { title:S2, items:[
+  "No cabinets out of level, plumb, or alignment",
+  "No gaps between cabinet boxes, fillers, or adjacent surfaces",
+  "All doors and drawers are aligned evenly with consistent spacing and reveals",
+  "All hardware operates smoothly and is properly adjusted",
+  "No damage to cabinets, doors, drawers, or finishes (scratches, chips, glue, etc.)",
+  "All nail holes and fasteners are properly filled and finished",
+  "All crown, trim, and scribe pieces are tight, clean, and visually consistent",
+  "All toe kicks are installed and complete",
+  "All floating cabinets and shelves are secure and properly supported",
+  "Wood grain alignment is consistent where required",
+  "No interference with appliances, plumbing, electrical, or lighting",
+  "All surfaces are clean and free of dust, debris, or installation residue" ]}]},
+{ name:"TILE", group:"Subcontractor QC", inspections:["Shower Pan/Waterproofing","Other"], sections:[
+ { title:S1, items:[
+  "All work matches plans, approved layout, and agreed scope",
+  "All wet areas are properly waterproofed prior to tile installation",
+  "Shower pans are properly sloped to drain",
+  "All tile layout, patterns, and termination points are verified prior to installation",
+  "Tile requiring sealing (e.g. natural stone, cement) has been sealed properly prior to installation if required",
+  "All niches, benches, shelves, and features are installed per plans and properly integrated",
+  "Wall and floor tile are installed flat, level, and properly aligned",
+  "Tile spacing and grout joint size are consistent throughout",
+  "All cuts (edges, corners, drains, penetrations) are clean, accurate, and properly located",
+  "All penetrations (valves, outlets, fixtures, etc.) are properly cut to allow full coverage by finish trim",
+  "Tile transitions and terminations (Schluter, edges, height changes, etc.) are properly installed",
+  "Installation is coordinated with cabinets, appliances, plumbing, and trim for proper layout and fit",
+  "All surfaces are prepared and installed to support proper adhesion and long-term performance",
+  "Work is performed without damage to tile, materials, or surrounding surfaces" ]},
+ { title:S2, items:[
+  "No lippage (uneven tile edges) on floors or walls",
+  "No uneven or inconsistent grout joints",
+  "No chips, cracks, or damaged tiles",
+  "Grout is fully installed, consistent, and free of holes or voids",
+  "Grout color matches approved selection",
+  "No grout haze or residue left on tile surfaces",
+  "All cuts are clean and properly aligned (including around drains, edges, and penetrations)",
+  "All tile layout is straight and visually consistent (no drifting or misalignment)",
+  "Tile terminates correctly at walls, cabinets, appliances, and shower glass locations",
+  "No gaps or exposed areas at penetrations or edges",
+  "Tile is properly positioned to be covered by baseboards or trim where required",
+  "No interference with fixtures, appliances, or finish elements",
+  "Work area is clean and free of debris, grout, or residue" ]}]},
+{ name:"DOORS & MILLWORK", group:"Subcontractor QC", inspections:["Other","Other"], sections:[
+ { title:S1, items:[
+  "All doors and millwork are installed per plans, layout, and agreed scope",
+  "All doors are correct size, swing, and type per plan (verify prior to install if unclear)",
+  "All jambs are correct width and properly set for wall and finish conditions",
+  "All doors are installed plumb, level, and square, and properly shimmed and secured",
+  "All doors operate correctly (open, close, latch, and align properly)",
+  "Door bottoms are properly trimmed for finished flooring conditions",
+  "All hardware (hinges, handles, tracks, etc.) is installed per plan and functions properly",
+  "Specialty doors (pocket, bifold, bypass) are properly installed and adjusted",
+  "All casing, baseboard, and millwork are installed straight, level, and aligned",
+  "All reveals at doors, windows, and openings are consistent and uniform",
+  "All miters and joints are tight, flush, properly glued, and cleanly finished",
+  "All millwork terminates cleanly at floors, walls, and adjacent materials",
+  "Installation is coordinated with flooring, cabinets, and drywall for proper fit and alignment",
+  "All nails are properly set for finishing",
+  "Work is performed without damage to doors, millwork, or surrounding surfaces" ]},
+ { title:S2, items:[
+  "No doors out of plumb, misaligned, or swinging on their own",
+  "All doors latch properly and align correctly with strikes",
+  "No rubbing, binding, or clearance issues at floors or frames",
+  "All door hardware functions properly and is installed correctly",
+  "No gaps at jambs, casing, baseboards, or floor transitions",
+  "All reveals are consistent and visually aligned across all openings",
+  "All miters are tight, flush, and free of gaps or separation",
+  "No damage to doors, trim, or millwork (chips, dents, scratches, etc.)",
+  "All specialty doors (pocket, bifold, bypass) operate smoothly and align properly",
+  "Baseboards and trim are tight to floors and walls (no gaps or poor scribing)",
+  "All adjacent openings and trim lines align consistently across the space",
+  "All closets and secondary areas are finished to same standard as main areas",
+  "No visible fasteners, unfinished nail holes, or installation defects",
+  "Work area is clean and free of debris or leftover materials" ]}]},
+{ name:"INTERIOR PAINT", group:"Subcontractor QC", inspections:["Other","Other"], sections:[
+ { title:S1, items:[
+  "All work matches plans, finish level, and agreed scope",
+  "All surfaces (walls, ceilings, trim, floors) are clean and free of dust, debris, and contaminants prior to prep",
+  "All drywall joints, nail holes, and imperfections are properly filled, sanded, and prepared for paint",
+  "All caulking is properly applied, smooth, and clean prior to painting",
+  "All corners and edges are sharp, square, and properly finished (no rounded or overfilled edges)",
+  "All surfaces are properly sanded and prepared for primer and paint",
+  "All new drywall is properly dusted and primed prior to painting",
+  "All masking and protection is properly installed to protect adjacent surfaces",
+  "Paint is applied per specifications (including backrolling where required)",
+  "All paint lines, transitions, and cut-ins are clean, straight, and properly defined",
+  "All surfaces are finished smooth and free of dust, debris, or contamination during application",
+  "Work is performed without damage to adjacent finishes, fixtures, or materials" ]},
+ { title:S2, items:[
+  "No visible dust, debris, or contamination under paint (painted over dust)",
+  "No visible imperfections in walls, ceilings, or trim after paint (patches, ridges, or rough areas)",
+  "No overspray, paint marks, or damage on floors, cabinets, fixtures, outlets, or adjacent surfaces",
+  "All cut lines are sharp and clean (no bleed, gaps, or uneven transitions)",
+  "No paint buildup, drips, runs, or sprayer defects",
+  "All corners are clean, sharp, and consistent",
+  "All caulk lines are smooth, clean, and properly finished",
+  "All caulk is painted where used in finishing",
+  "All outlets, switches, fixtures, and hardware are clean and free of paint",
+  "All surfaces have consistent coverage, color, and finish (no flashing or inconsistency)",
+  "All areas (including closets and secondary spaces) are finished to same standard as main areas",
+  "All materials and leftover paint are properly labeled and organized",
+  "Work area is clean and free of dust, masking, and debris" ]}]},
+{ name:"EXTERIOR PAINT", group:"Subcontractor QC", inspections:["Other","Other"], sections:[
+ { title:S1, items:[
+  "All work matches plans, color selections, and agreed scope",
+  "All surfaces are properly prepared prior to painting (clean, dry, and free of dust, dirt, chalking, or contaminants)",
+  "All surfaces are properly scraped, sanded, and repaired where needed prior to paint",
+  "All cracks, joints, and penetrations are properly sealed and caulked",
+  "All surfaces are properly primed where required",
+  "All masking and protection is properly installed to protect windows, doors, fixtures, roofing, concrete, and surrounding surfaces",
+  "Paint is applied per specifications (including backrolling where required)",
+  "Paint is applied below grade at stems and foundations where necessary",
+  "All paint lines, transitions, and cut-ins are clean, straight, and properly defined",
+  "All surfaces receive consistent and even coverage across all elevations",
+  "Application is coordinated with weather conditions to ensure proper adhesion and finish",
+  "All penetrations, fixtures, and transitions are properly sealed and finished",
+  "Work is performed without damage to surrounding materials or finishes" ]},
+ { title:S2, items:[
+  "No visible overspray, paint marks, or damage on windows, doors, glass, roofing, concrete, or adjacent surfaces",
+  "No visible peeling, flashing, lap marks, or inconsistent finish across elevations",
+  "No missed areas or thin coverage (including edges, soffits, trim, and behind elements)",
+  "All cut lines are sharp and clean (no bleed, gaps, or uneven transitions)",
+  "No paint buildup, drips, runs, or sprayer defects",
+  "Grade is properly restored if moved away from foundation during painting",
+  "All caulk lines are smooth, clean, and properly finished",
+  "No exposed raw material or unpainted surfaces where coverage is required",
+  "All color transitions and material transitions are clean and consistent",
+  "All fixtures, vents, outlets, and penetrations are clean and properly detailed",
+  "All masking is removed and all surfaces are clean",
+  "Work area is clean and free of debris, masking, and paint residue" ]}]},
+{ name:"End-of-Day Site Close-out (DEMO field ops walk)", group:"Field Ops (demo)", inspections:[], sections:[
+ { title:"Daily close-out", items:[
+  "Job site cleanliness scored (end of day)",
+  "Materials for tomorrow confirmed on site (4pm gate)",
+  "Day-before lineout posted for each crew",
+  "Tools and equipment secured",
+  "Permit / yellow sheet accessible for inspector",
+  "Client areas protected (site protection in place)",
+  "Progress photos taken" ]}]},
+];
+(function(){
+  const sel = $("wtTpl");
+  if(!sel) return;
+  const groups = [...new Set(WT_LIST.map(t=>t.group))];
+  sel.innerHTML = groups.map(g =>
+    '<optgroup label="'+g+'">'+WT_LIST.filter(t=>t.group===g).map(t=>'<option>'+t.name+'</option>').join("")+'</optgroup>'
+  ).join("");
+})();
+
+function wtStart(){
+  if(!$("wtJob").value){ alert("Select a job before starting the walkthrough - job is required."); return; }
+  if(wtRun && wtRun.items.some(i=>i.result) && !confirm("A walkthrough is in progress - discard it?")) return;
+  const T = WT_LIST.find(t=>t.name === $("wtTpl").value);
+  if(!T) return;
+  wtRun = {
+    tpl: T.name, job: $("wtJob").value, started: new Date().toISOString(),
+    items: T.sections.flatMap(sec => sec.items.map(t => ({ text:t, sec:sec.title, result:null, note:"", photos:[], video:null }))),
+    insp: T.inspections.map(l => ({ label:l, checked:false, other:"" })),
+    defects: { has:null, text:"" }, signSub:"", signPm:"",
+  };
+  renderWt();
+}
+function wtSet(i, val){ wtRun.items[i].result = (wtRun.items[i].result === val ? null : val); renderWt(); }
+function wtNoteSave(i, el){ wtRun.items[i].note = el.value; }
+function wtDef(v){ wtRun.defects.has = v; renderWt(); }
+function wtDefText(el){ wtRun.defects.text = el.value; }
+function wtInspChk(i, el){ wtRun.insp[i].checked = el.checked; }
+function wtInspOther(i, el){ wtRun.insp[i].other = el.value; }
+function wtSign(which, el){ if(which==="sub") wtRun.signSub = el.value; else wtRun.signPm = el.value; }
+
+function renderWt(){
+  const el = $("wtList");
+  if(!wtRun){ el.innerHTML = ""; return; }
+  const done = wtRun.items.filter(i=>i.result).length;
+  let prevSec = null;
+  let body = "";
+  wtRun.items.forEach((it, i) => {
+    if(it.sec !== prevSec){
+      prevSec = it.sec;
+      body += '<div style="background:var(--navy);color:#fff;border-radius:8px;padding:7px 12px;margin:14px 0 8px;font-size:13px;font-weight:bold;">'+it.sec+'</div>';
+    }
+    body += '<div class="wtitem">' +
+      '<div class="it">'+(i+1)+'. '+it.text+'</div>' +
+      '<div class="tri">' +
+        '<button class="'+(it.result==="pass"?"on-pass":"")+'" onclick="wtSet('+i+',\'pass\')">Pass</button>' +
+        '<button class="'+(it.result==="fail"?"on-fail":"")+'" onclick="wtSet('+i+',\'fail\')">Fail</button>' +
+        '<button class="'+(it.result==="na"?"on-na":"")+'" onclick="wtSet('+i+',\'na\')">N/A</button>' +
+      '</div>' +
+      '<input type="text" placeholder="Note (what/where/why)" value="'+it.note.replace(/"/g,"&quot;")+'" onchange="wtNoteSave('+i+', this)" style="margin-top:8px;">' +
+      '<div class="fallbacks" style="justify-content:flex-start; margin-top:8px;">' +
+        '<button class="chip" onclick="addPhoto('+i+')">+ Photo</button>' +
+        '<button class="chip" onclick="addVideo('+i+')">+ Video</button>' +
+      '</div>' +
+      '<div>' +
+        it.photos.map(p=>'<span class="thumbwrap"><img class="thumb" src="'+p+'"></span>').join("") +
+        (it.video ? '<span class="thumbwrap"><video class="thumb" src="'+it.video+'" controls></video></span>' : "") +
+      '</div>' +
+      '</div>';
+  });
+  // defects + inspections + signatures (mirrors the printed form)
+  let tail = '<div style="background:var(--navy);color:#fff;border-radius:8px;padding:7px 12px;margin:14px 0 8px;font-size:13px;font-weight:bold;">Defects, Inspections, Sign-off</div>';
+  tail += '<div class="wtitem"><div class="it">Are there any defects associated with the work?</div><div class="tri">' +
+    '<button class="'+(wtRun.defects.has==="yes"?"on-fail":"")+'" onclick="wtDef(\'yes\')">Yes</button>' +
+    '<button class="'+(wtRun.defects.has==="no"?"on-pass":"")+'" onclick="wtDef(\'no\')">No</button></div>' +
+    (wtRun.defects.has==="yes" ? '<input type="text" placeholder="If yes, what?" value="'+wtRun.defects.text.replace(/"/g,"&quot;")+'" onchange="wtDefText(this)" style="margin-top:8px;">' : "") + '</div>';
+  if(wtRun.insp.length){
+    tail += '<div class="wtitem"><div class="it">Inspections needed</div>' + wtRun.insp.map((x,i)=>
+      '<div style="margin-top:7px;font-size:13px;"><label style="display:inline;font-weight:normal;"><input type="checkbox" style="width:auto;margin-right:7px;" '+(x.checked?"checked":"")+' onchange="wtInspChk('+i+', this)">'+x.label+'</label>' +
+      (x.label==="Other" ? ' <input type="text" placeholder="describe" value="'+x.other.replace(/"/g,"&quot;")+'" onchange="wtInspOther('+i+', this)" style="width:60%;padding:6px;font-size:13px;">' : "") + '</div>'
+    ).join("") + '</div>';
+  }
+  tail += '<div class="wtitem"><div class="it">Sign-off (typed name, v0)</div><div class="row" style="display:flex;gap:10px;flex-wrap:wrap;">' +
+    '<div style="flex:1;min-width:140px;"><input type="text" placeholder="Subcontractor name" value="'+wtRun.signSub.replace(/"/g,"&quot;")+'" onchange="wtSign(\'sub\', this)" style="margin-top:6px;"></div>' +
+    '<div style="flex:1;min-width:140px;"><input type="text" placeholder="Project Manager name" value="'+wtRun.signPm.replace(/"/g,"&quot;")+'" onchange="wtSign(\'pm\', this)" style="margin-top:6px;"></div></div>' +
+    '<div style="font-size:11px;color:var(--mut);margin-top:6px;">Per the printed form: checklist must be complete and all items addressed or final payment will not be issued.</div></div>';
+
+  el.innerHTML =
+    '<div class="card"><h2>'+wtRun.tpl+' - '+wtRun.job+'</h2>' +
+    '<div class="wtprog">'+done+' of '+wtRun.items.length+' items checked</div>' +
+    body + tail +
+    '<div class="btnrow"><button class="btn green" onclick="wtComplete()">Complete walkthrough</button>' +
+    '<button class="btn secondary" onclick="if(confirm(\'Discard this walkthrough?\')){wtRun=null;renderWt();}">Discard</button></div></div>';
+}
+
+async function wtComplete(){
+  const unchecked = wtRun.items.filter(i=>!i.result).length;
+  if(unchecked && !confirm(unchecked+" item(s) unchecked. The printed form requires every item addressed before final payment. Complete anyway (unchecked items save as N/A)?")) return;
+  wtRun.items.forEach(i=>{ if(!i.result) i.result = "na"; });
+  const pass = wtRun.items.filter(i=>i.result==="pass").length;
+  const fails = wtRun.items.filter(i=>i.result==="fail");
+  const na = wtRun.items.filter(i=>i.result==="na").length;
+  const scoreBase = pass + fails.length;
+  const pct = scoreBase ? Math.round(pass/scoreBase*100) : 100;
+  const who = $("who") ? $("who").value : "";
+  const inspSel = wtRun.insp.filter(x=>x.checked).map(x=> (x.label==="Other" && x.other) ? "Other: "+x.other : x.label);
+  const defStr = wtRun.defects.has==="yes" ? "Defects reported: "+(wtRun.defects.text||"[not described]")
+               : (wtRun.defects.has==="no" ? "No defects reported." : "Defects question not answered.");
+  const now = Date.now();
+  const recs = [];
+  recs.push({
+    id: now, ts: new Date().toISOString(), who, job: wtRun.job,
+    transcript: "QC Walkthrough: "+wtRun.tpl+" - "+pass+" pass / "+fails.length+" fail / "+na+" n-a ("+pct+"% first-pass). "+defStr+
+      (inspSel.length ? " Inspections needed: "+inspSel.join(", ")+"." : "")+
+      (fails.length ? " Fails: "+fails.map(f=>f.text).join("; ") : "")+
+      (wtRun.signSub||wtRun.signPm ? " Signed: sub "+(wtRun.signSub||"[blank]")+", PM "+(wtRun.signPm||"[blank]")+"." : ""),
+    cat: (fails.length || wtRun.defects.has==="yes") ? "Quality issue" : "Operational update", sys: "Quality",
+    pri: fails.length ? "High" : "Low", own: "Zach",
+    due: fails.length ? "Today" : "This week", amt: "",
+    act: fails.length ? "Resolve "+fails.length+" failed item(s) prior to final payment release" : "None - walkthrough passed",
+    status: "New", hasAudio: false,
+    photos: [], hasVideo: false, type: "walkthrough",
+    wtScore: pct,
+    wtDetail: { tpl: wtRun.tpl, defects: wtRun.defects, inspections: inspSel, signSub: wtRun.signSub, signPm: wtRun.signPm,
+                items: wtRun.items.map(i=>({ sec:i.sec, text:i.text, result:i.result, note:i.note })) },
+    synced: false, source: "thb_fieldapp_v0.10",
+  });
+  fails.forEach((f, ix) => {
+    recs.push({
+      id: now + ix + 1, ts: new Date().toISOString(), who, job: wtRun.job,
+      transcript: "[QC fail - "+wtRun.tpl+"] "+f.text+(f.note? " - "+f.note : ""),
+      cat: "Quality issue", sys: "Quality", pri: "High", own: "Zach",
+      due: "Today", amt: "", act: "Fix and re-check prior to final payment: "+f.text,
+      status: "New", hasAudio: false,
+      photos: f.photos.slice(), hasVideo: !!f.video, type: "walkthrough-fail",
+      synced: false, source: "thb_fieldapp_v0.10",
+    });
+  });
+  const hook = localStorage.getItem(HOOKKEY) || DEFAULT_HOOK_URL;
+  if(hook){
+    for(const rec of recs){
+      try{
+        const payload = Object.assign({}, rec);
+        while(payload.photos && payload.photos.length && JSON.stringify(payload).length > 3400000){
+          payload.photos = payload.photos.slice(0, payload.photos.length - 1);
+        }
+        const resp = await fetch(hook, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(payload) });
+        rec.synced = resp.ok;
+      }catch(e){ rec.synced = false; }
+    }
+  }
+  const items = loadItems();
+  recs.reverse().forEach(r=>items.unshift(r));
+  saveItems(items);
+  alert(fails.length
+    ? pct+"% first-pass. "+fails.length+" failed item(s) are now "+(hook? "in the queue" : "in the local feed")+" as assignable tasks. Final payment holds until they clear."
+    : pct+"% first-pass - clean walkthrough logged. "+defStr);
+  wtRun = null; renderWt();
+  showTab('feed');
+}
+
+/* ---------- classification (PROD: replace with small-LLM call) ---------- */
+function classify(text){
+  const t = text.toLowerCase();
+  let best = null, bestScore = 0;
+  for(const row of TAXONOMY){
+    let s = 0;
+    for(const k of row.kw){ if(t.includes(k)) s++; }
+    if(s > bestScore){ bestScore = s; best = row; }
+  }
+  if(!best) best = TAXONOMY[TAXONOMY.length-1]; // default: operational update
+  let amt = "";
+  const m = text.match(/\$\s?([\d,]+(?:\.\d{2})?)/);
+  if(m){ amt = "$"+m[1]; }
+  else{
+    const words = t.match(/\b(twelve fifty|[a-z]+ (hundred|thousand|grand))\b/);
+    if(words){ amt = words[0] === "twelve fifty" ? "$1,250 (spoken)" : words[0]+" (spoken)"; }
+  }
+  let pri = best.pri;
+  if(/\b(today|tonight|by noon|right now|asap|before the crew|tomorrow)\b/.test(t) && pri === "Medium") pri = "High";
+  let act = "";
+  const sent = text.split(/(?<=[.!?])\s+/).find(s=>/need|must|has to|have to/i.test(s));
+  act = sent ? sent.trim() : "Review and assign.";
+  let due = "Today";
+  if(/tomorrow/.test(t)) due = "Tomorrow";
+  if(/monday/.test(t)) due = "Monday";
+  if(pri === "Low") due = "This week";
+  return { cat:best.cat, sys:best.sys, own:best.own, pri, amt, act, due };
+}
+
+function runClassify(){
+  const text = $("transcript").value.trim();
+  if(!text){ alert("Nothing to classify - record, load a sample, or type first."); return; }
+  const r = classify(text);
+  $("fCat").innerHTML = CATS.map(c=>`<option${c===r.cat?" selected":""}>${c}</option>`).join("");
+  $("fPri").value = r.pri; $("fOwn").value = r.own; $("fDue").value = r.due;
+  $("fAmt").value = r.amt; $("fAct").value = r.act;
+  $("pills").innerHTML =
+    `<span class="pill sys-${r.sys}">${r.sys}</span>`+
+    `<span class="pill pri-${r.pri}">${r.pri}</span>`+
+    `<span style="font-size:11px;color:var(--mut);">auto-classified - correct anything that is wrong, the correction trains the rules</span>`;
+  $("resultCard").style.display = "block";
+  $("resultCard").scrollIntoView({ behavior:"smooth" });
+}
+
+/* ---------- store + feed ---------- */
+function loadItems(){ try{ return JSON.parse(localStorage.getItem(LSKEY)||"[]"); }catch(e){ return []; } }
+function saveItems(x){
+  let str = JSON.stringify(x);
+  for(let i = x.length - 1; i >= 0 && str.length > 4200000; i--){
+    if(x[i].photos && x[i].photos.length){ x[i].photos = []; str = JSON.stringify(x); }
+  }
+  try{ localStorage.setItem(LSKEY, str); }catch(e){ /* quota - demo only */ }
+}
+
+function buildRecord(){
+  const catSel = $("fCat").value;
+  const sys = (TAXONOMY.find(t=>t.cat===catSel)||{}).sys || "Process";
+  return {
+    id: Date.now(),
+    ts: new Date().toISOString(),
+    who: $("who").value,
+    job: $("job").value,
+    transcript: $("transcript").value.trim(),
+    cat: catSel, sys,
+    pri: $("fPri").value,
+    own: $("fOwn").value,
+    due: $("fDue").value,
+    amt: $("fAmt").value,
+    act: $("fAct").value,
+    status: "New",
+    hasAudio: !!audioBlob,
+    photos: reportPhotos.slice(),
+    hasVideo: !!reportVideo,
+    type: "voice",
+    synced: false,
+    source: "thb_fieldapp_v0.10",
+  };
+}
+
+function blobToBase64(blob){
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onloadend = () => res(String(r.result).split(",")[1] || "");
+    r.onerror = rej;
+    r.readAsDataURL(blob);
+  });
+}
+
+async function submitItem(){
+  const rec = buildRecord();
+  if(!rec.job){ alert("Select a job before submitting - job is required so this attaches to a real record."); return; }
+  if(!rec.transcript){ alert("Transcript is empty - dictate, type, or load a sample first."); return; }
+  const hook = localStorage.getItem(HOOKKEY) || DEFAULT_HOOK_URL;
+  const btns = document.querySelectorAll("#resultCard .btn");
+  btns.forEach(b=>b.disabled=true);
+  if(hook){
+    try{
+      const payload = Object.assign({}, rec);
+      while(payload.photos && payload.photos.length && JSON.stringify(payload).length > 3400000){
+        payload.photos = payload.photos.slice(0, payload.photos.length - 1); // webhook body cap
+      }
+      if(audioBlob && (localStorage.getItem(HOOKAUDIOKEY)||"yes")==="yes"){
+        payload.audio_base64 = await blobToBase64(audioBlob);
+        payload.audio_mime = audioBlob.type || "audio/mp4";
+      }
+      const resp = await fetch(hook, {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify(payload),
+      });
+      rec.synced = resp.ok;
+    }catch(e){ rec.synced = false; }
+  }
+  const items = loadItems();
+  items.unshift(rec);
+  saveItems(items);
+  btns.forEach(b=>b.disabled=false);
+  alert(hook
+    ? (rec.synced ? "SENT TO QUEUE - the owner will be notified." : "Queue unreachable - saved on this phone as NOT SYNCED. It will still be in your local feed; resubmit when back online.")
+    : "QUEUED LOCALLY (demo mode - no webhook set in Setup). Nothing left this phone.");
+  resetCapture();
+  showTab('feed');
+}
+
+/* ---------- setup tab ---------- */
+function saveHook(){
+  const url = $("hookUrl").value.trim();
+  if(url && !/^https:\/\//.test(url)){ $("hookStatus").innerHTML = "<b style='color:var(--red)'>URL must start with https://</b>"; return; }
+  localStorage.setItem(HOOKKEY, url);
+  localStorage.setItem(HOOKAUDIOKEY, $("hookAudio").value);
+  $("hookStatus").innerHTML = url ? "<b style='color:var(--green)'>Saved.</b> Submissions will post to the queue." : "Cleared - back to local demo mode.";
+}
+async function testHook(){
+  const url = $("hookUrl").value.trim() || localStorage.getItem(HOOKKEY) || DEFAULT_HOOK_URL;
+  if(!url){ $("hookStatus").innerHTML = "<b style='color:var(--red)'>No webhook URL to test.</b>"; return; }
+  $("hookStatus").textContent = "Sending test...";
+  try{
+    const resp = await fetch(url, {
+      method:"POST", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ source:"thb_opsvoice_v0.4", test:true, ts:new Date().toISOString(), who:$("who")?$("who").value:"", transcript:"Connection test from the phone." }),
+    });
+    $("hookStatus").innerHTML = resp.ok
+      ? "<b style='color:var(--green)'>Connected ("+resp.status+").</b> Check the Make.com scenario history for the test bundle."
+      : "<b style='color:var(--red)'>Webhook answered "+resp.status+".</b> Check the scenario is ON.";
+  }catch(e){
+    $("hookStatus").innerHTML = "<b style='color:var(--red)'>Could not reach the webhook.</b> Check the URL and that the Make scenario is running.";
+  }
+}
+function loadSetup(){
+  $("hookUrl").value = localStorage.getItem(HOOKKEY) || "";
+  $("hookAudio").value = localStorage.getItem(HOOKAUDIOKEY) || "yes";
+  $("hookStatus").innerHTML = "Webhook set - submissions post to the shared queue.";
+}
+
+function age(ts){
+  const mins = Math.floor((Date.now()-new Date(ts).getTime())/60000);
+  if(mins < 60) return mins+" min"; const h = Math.floor(mins/60);
+  if(h < 24) return h+" hr"; return Math.floor(h/24)+" d";
+}
+
+function renderFeed(){
+  const items = loadItems();
+  const open = items.filter(i=>!["Resolved","Rejected / duplicate"].includes(i.status));
+  const hi = open.filter(i=>i.pri==="Emergency"||i.pri==="High").length;
+  const resolved = items.filter(i=>i.status==="Resolved").length;
+  const bySys = {};
+  items.forEach(i=>bySys[i.sys]=(bySys[i.sys]||0)+1);
+  const topSys = Object.entries(bySys).sort((a,b)=>b[1]-a[1])[0];
+  $("kpis").innerHTML = `
+    <div class="kpi"><div class="v">${items.length}</div><div class="l">Submissions</div></div>
+    <div class="kpi"><div class="v" style="color:${hi? 'var(--red)':'var(--green)'}">${hi}</div><div class="l">Open High/Emerg</div></div>
+    <div class="kpi"><div class="v">${items.length? Math.round(resolved/items.length*100)+"%" : "-"}</div><div class="l">Resolved</div></div>
+    <div class="kpi"><div class="v" style="font-size:14px;padding-top:5px;">${topSys? topSys[0]+" ("+topSys[1]+")":"-"}</div><div class="l">Top system</div></div>`;
+  const STATUSES = ["New","Acknowledged","Assigned","In progress","Waiting","Resolved","Rejected / duplicate"];
+  $("feedlist").innerHTML = items.length ? items.map(i=>`
+    <div class="feeditem" style="border-left-color:${i.pri==='Emergency'?'var(--red)':i.pri==='High'?'#d35400':i.pri==='Medium'?'var(--amber)':'var(--gray)'}">
+      <div class="top">
+        <div>
+          <span class="pill sys-${i.sys}">${i.sys}</span>
+          <span class="pill pri-${i.pri}">${i.pri}</span>
+          <b style="font-size:13px;">${i.cat}</b>
+        </div>
+        <select onchange="setStatus(${i.id}, this.value)">
+          ${STATUSES.map(s=>`<option${s===i.status?" selected":""}>${s}</option>`).join("")}
+        </select>
+      </div>
+      <div class="msg">"${i.transcript}"</div>
+      ${ (i.photos && i.photos.length) || i.hasVideo ? '<div>'+(i.photos||[]).map(ph=>'<span class="thumbwrap"><img class="thumb" src="'+ph+'"></span>').join('')+(i.hasVideo? ' <span class="audio-tag">video on device (demo - production uploads to storage)</span>':'')+'</div>' : "" }
+      <div class="meta">
+        ${i.job} &bull; by ${i.who} &bull; ${age(i.ts)} ago &bull; owner: <b>${i.own}</b> &bull; due: ${i.due}
+        ${i.amt? "&bull; amount: <b>"+i.amt+"</b>" : ""}
+        ${i.hasAudio? '&bull; <span class="audio-tag">audio attached</span>' : ""}
+        ${i.synced===false ? '&bull; <b style="color:var(--red)">not synced</b>' : (i.synced ? '&bull; <span style="color:var(--green);font-weight:bold;">sent to queue</span>' : '')}
+        <br>Action: ${i.act}
+      </div>
+    </div>`).join("")
+    : `<div class="empty">No submissions yet.<br>Go to Report / Update and tap the button (or load a sample).</div>`;
+}
+
+function setStatus(id, s){
+  const items = loadItems();
+  const it = items.find(x=>x.id===id);
+  if(it){ it.status = s; saveItems(items); renderFeed(); }
+}
+
+function exportJson(){
+  const blob = new Blob([JSON.stringify(loadItems(),null,2)],{type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "thb_opsvoice_export.json"; a.click();
+}
+
+/* ---------- toolbox (start of day / end of day) ---------- */
+function tbxSetMode(m){
+  tbxMode = m;
+  $("tbxStartPanel").classList.toggle("hidden", m !== "start");
+  $("tbxEndPanel").classList.toggle("hidden", m !== "end");
+  $("tbxBtnStart").className = "btn" + (m === "start" ? "" : " secondary");
+  $("tbxBtnEnd").className = "btn" + (m === "end" ? "" : " secondary");
+}
+
+function tbxSetScore(n){
+  tbxScore = (tbxScore === n ? null : n);
+  renderTbxScore();
+}
+function renderTbxScore(){
+  for(let n = 1; n <= 5; n++){
+    const b = $("tbxScore" + n);
+    if(b) b.className = (tbxScore === n ? "on-pass" : "");
+  }
+}
+function tbxSetMaterials(v){
+  tbxMaterials = (tbxMaterials === v ? null : v);
+  renderTbxMaterials();
+}
+function renderTbxMaterials(){
+  const map = { "Yes":"tbxMatYes", "No":"tbxMatNo", "N/A self supplied":"tbxMatNA" };
+  Object.keys(map).forEach(k => {
+    const b = $(map[k]);
+    if(!b) return;
+    b.className = (tbxMaterials === k) ? (k === "Yes" ? "on-pass" : (k === "No" ? "on-fail" : "on-na")) : "";
+  });
+}
+
+function renderTbxStartMedia(){
+  const el = $("tbxStartMedia"); if(!el) return;
+  el.innerHTML = tbxStartPhotos.map((p,ix)=>'<span class="thumbwrap"><img class="thumb" src="'+p+'"><button class="thumbx" onclick="tbxStartPhotos.splice('+ix+',1);renderTbxStartMedia()">x</button></span>').join("") +
+    (tbxStartVideo ? '<span class="thumbwrap"><video class="thumb" src="'+tbxStartVideo+'" controls></video><button class="thumbx" onclick="tbxStartVideo=null;renderTbxStartMedia()">x</button></span>' : "");
+}
+function renderTbxEndMedia(){
+  const el = $("tbxEndMedia"); if(!el) return;
+  el.innerHTML = tbxEndPhotos.map((p,ix)=>'<span class="thumbwrap"><img class="thumb" src="'+p+'"><button class="thumbx" onclick="tbxEndPhotos.splice('+ix+',1);renderTbxEndMedia()">x</button></span>').join("") +
+    (tbxEndVideo ? '<span class="thumbwrap"><video class="thumb" src="'+tbxEndVideo+'" controls></video><button class="thumbx" onclick="tbxEndVideo=null;renderTbxEndMedia()">x</button></span>' : "");
+}
+
+function tbxBuildStartRecord(){
+  const job = $("tbxStartJob").value;
+  const who = $("tbxStartWho").value;
+  const crewSize = $("tbxCrewSize").value;
+  const safety = $("tbxSafety").value.trim();
+  const buildProblems = $("tbxBuildProblems").value.trim();
+  const correction = $("tbxCorrection").value.trim();
+  const safetyFlag = !!safety && safety.trim().toLowerCase() !== "none";
+  const cat = safetyFlag ? "Emergency / safety" : "Operational update";
+  const row = TAXONOMY.find(t=>t.cat===cat) || {};
+  const sys = row.sys || "Process";
+  const own = row.own || "Zach";
+  const pri = row.pri || "Low";
+  const due = pri === "Emergency" ? "Today" : "This week";
+  const act = safetyFlag
+    ? "Review safety concern and confirm it is corrected before work continues."
+    : ((tbxScore !== null && tbxScore < 4) ? "Complete the cleanliness correction noted above." : "Log only, no action required.");
+  const transcript =
+    "On-site check, " + job + ". " +
+    "Crew size on this job: " + (crewSize || "not entered") + ". " +
+    "Highest risk activity or safety concern: " + (safety || "not entered") + ". " +
+    "Build or sub work problems: " + (buildProblems || "None reported") + ". " +
+    "Site cleanliness score: " + (tbxScore !== null ? (tbxScore + "/5") : "not scored") + ". " +
+    "Correction needed and owner: " + (correction || "none") + ". " +
+    "Materials on site and ready: " + (tbxMaterials || "not entered") + ".";
+  return {
+    id: Date.now(), ts: new Date().toISOString(), who, job,
+    transcript, cat, sys, pri, own, due, amt:"", act,
+    status:"New", hasAudio:false,
+    photos: tbxStartPhotos.slice(), hasVideo: !!tbxStartVideo,
+    type:"toolbox_start",
+    crewSize, safetyConcern: safety, buildProblems,
+    cleanScore: tbxScore, correction, materialsReady: tbxMaterials,
+    synced:false, source:"thb_fieldapp_v0.10",
+  };
+}
+
+async function tbxSubmitStart(){
+  const rec = tbxBuildStartRecord();
+  if(!rec.job){ alert("Select a job before submitting, job is required so this attaches to a real record."); return; }
+  const hook = localStorage.getItem(HOOKKEY) || DEFAULT_HOOK_URL;
+  const btn = $("tbxSubmitStartBtn");
+  if(btn) btn.disabled = true;
+  if(hook){
+    try{
+      const payload = Object.assign({}, rec);
+      while(payload.photos && payload.photos.length && JSON.stringify(payload).length > 3400000){
+        payload.photos = payload.photos.slice(0, payload.photos.length - 1);
+      }
+      const resp = await fetch(hook, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(payload) });
+      rec.synced = resp.ok;
+    }catch(e){ rec.synced = false; }
+  }
+  const items = loadItems();
+  items.unshift(rec);
+  saveItems(items);
+  if(btn) btn.disabled = false;
+  alert(hook
+    ? (rec.synced ? "SENT TO QUEUE, the owner will be notified." : "Queue unreachable, saved on this phone as NOT SYNCED. It will still be in your local feed, resubmit when back online.")
+    : "QUEUED LOCALLY (demo mode, no webhook set in Setup). Nothing left this phone.");
+  tbxResetStart();
+  showTab('feed');
+}
+
+function tbxResetStart(){
+  $("tbxStartJob").value = "";
+  $("tbxCrewSize").value = "";
+  $("tbxSafety").value = "";
+  $("tbxBuildProblems").value = "";
+  $("tbxCorrection").value = "";
+  tbxScore = null; renderTbxScore();
+  tbxMaterials = null; renderTbxMaterials();
+  tbxStartPhotos = []; tbxStartVideo = null; renderTbxStartMedia();
+}
+
+function tbxBuildEndRecord(){
+  const job = $("tbxEndJob").value;
+  const who = $("tbxEndWho").value;
+  const workCompleted = $("tbxWorkCompleted").value.trim();
+  const hoursRaw = $("tbxHours").value;
+  const blockers = $("tbxBlockers").value.trim();
+  const inspectionNotes = $("tbxInspection").value.trim();
+  const cat = "Operational update";
+  const row = TAXONOMY.find(t=>t.cat===cat) || {};
+  const sys = row.sys || "Process";
+  const own = row.own || "Zach";
+  const pri = row.pri || "Low";
+  const due = "This week";
+  const act = blockers ? "Clear the reported blocker before tomorrow's start." : "Log only, no action required.";
+  const transcript =
+    "Off-site check, " + job + ". " +
+    "Work completed today: " + (workCompleted || "not entered") + ". " +
+    "Hours on this job: " + (hoursRaw || "not entered") + ". " +
+    "Anything that will stop work tomorrow: " + (blockers || "None reported") + ". " +
+    "Inspection or paperwork completed today: " + (inspectionNotes || "None reported") + ".";
+  return {
+    id: Date.now(), ts: new Date().toISOString(), who, job,
+    transcript, cat, sys, pri, own, due, amt:"", act,
+    status:"New", hasAudio:false,
+    photos: tbxEndPhotos.slice(), hasVideo: !!tbxEndVideo,
+    type:"toolbox_end",
+    workCompleted, hours: hoursRaw ? Number(hoursRaw) : null,
+    blockers, inspectionNotes,
+    synced:false, source:"thb_fieldapp_v0.10",
+  };
+}
+
+async function tbxSubmitEnd(){
+  const rec = tbxBuildEndRecord();
+  if(!rec.job){ alert("Select a job before submitting, job is required so this attaches to a real record."); return; }
+  const hook = localStorage.getItem(HOOKKEY) || DEFAULT_HOOK_URL;
+  const btn = $("tbxSubmitEndBtn");
+  if(btn) btn.disabled = true;
+  if(hook){
+    try{
+      const payload = Object.assign({}, rec);
+      while(payload.photos && payload.photos.length && JSON.stringify(payload).length > 3400000){
+        payload.photos = payload.photos.slice(0, payload.photos.length - 1);
+      }
+      const resp = await fetch(hook, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(payload) });
+      rec.synced = resp.ok;
+    }catch(e){ rec.synced = false; }
+  }
+  const items = loadItems();
+  items.unshift(rec);
+  saveItems(items);
+  if(btn) btn.disabled = false;
+  alert(hook
+    ? (rec.synced ? "SENT TO QUEUE, the owner will be notified." : "Queue unreachable, saved on this phone as NOT SYNCED. It will still be in your local feed, resubmit when back online.")
+    : "QUEUED LOCALLY (demo mode, no webhook set in Setup). Nothing left this phone.");
+  tbxResetEnd();
+  showTab('feed');
+}
+
+function tbxResetEnd(){
+  $("tbxEndJob").value = "";
+  $("tbxWorkCompleted").value = "";
+  $("tbxHours").value = "";
+  $("tbxBlockers").value = "";
+  $("tbxInspection").value = "";
+  tbxEndPhotos = []; tbxEndVideo = null; renderTbxEndMedia();
+}
+
+/* ---------- tabs ---------- */
+function showTab(t){
+  $("tbx").classList.toggle("hidden", t!=="tbx");
+  $("wt").classList.toggle("hidden", t!=="wt");
+  $("feed").classList.toggle("hidden", t!=="feed");
+  $("setup").classList.toggle("hidden", t!=="setup");
+  $("tabTbx").classList.toggle("active", t==="tbx");
+  $("tabWt").classList.toggle("active", t==="wt");
+  $("tabFeed").classList.toggle("active", t==="feed");
+  $("tabSetup").classList.toggle("active", t==="setup");
+  if(t==="feed") renderFeed();
+  if(t==="setup") loadSetup();
+  if(t==="wt") renderWt();
+  window.scrollTo(0,0);
+}
+renderFeed();
+</script>
+</body>
+</html>

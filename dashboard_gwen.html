@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DYP PM Dashboard v0.10 DRAFT</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{
+  --bg:#ffffff; --panel:#ffffff; --panel2:#f2f5fa; --line:#c9d3e0;
+  --ink:#1a1a1a; --ink-dim:#5a6470; --ink-faint:#63707d;
+  --green:#006100; --amber:#9c6500; --red:#c00000; --gray:#a6a6a6;
+  --blue:#1f3864;
+  --font: Arial, Helvetica, sans-serif;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;}
+header.app{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;}
+header.app h1{margin:0;font-size:19px;color:#1f3864;}
+header.app .sub{color:var(--ink-dim);font-size:12px;margin-top:3px;}
+.limitnote{background:#fff2cc;border:1px solid #bf8f00;color:#7f6000;padding:8px 12px;font-size:12px;margin:10px 18px;border-radius:4px;}
+main{padding:0 18px 40px;max-width:1500px;margin:0 auto;}
+section{margin-top:18px;}
+h2{font-size:14px;text-transform:uppercase;letter-spacing:.04em;color:#1f3864;border-bottom:1px solid var(--line);padding-bottom:6px;margin:0 0 10px;}
+.stripwrap{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;}
+.stile{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:8px 10px;}
+.stile .n{font-size:20px;font-weight:bold;}
+.stile .l{font-size:10px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.03em;}
+.stile.warn .n{color:var(--amber);}
+.stile.bad .n{color:var(--red);}
+.stile.ok .n{color:var(--green);}
+.banners{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.banner{border-radius:6px;padding:14px 16px;border:1px solid var(--line);}
+.banner .q{font-size:11px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.03em;}
+.banner .a{font-size:22px;font-weight:bold;margin:4px 0;}
+.banner .d{font-size:12px;color:var(--ink-dim);}
+.banner.g{background:#e2efda;border-color:#70ad47;} .banner.g .a{color:var(--green);}
+.banner.y{background:#fff2cc;border-color:#ffd966;} .banner.y .a{color:var(--amber);}
+.banner.r{background:#fce4e4;border-color:#f4b7b7;} .banner.r .a{color:var(--red);}
+table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--panel);}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:middle;}
+th{color:#ffffff;background:#1f3864;font-weight:bold;text-transform:uppercase;font-size:10.5px;letter-spacing:.03em;}
+tr.clickable{cursor:pointer;}
+tr.clickable:hover{background:var(--panel2);}
+tbody tr:nth-child(even){background:#f2f5fa;}
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;background:var(--gray);}
+.dot.g{background:var(--green);} .dot.y{background:var(--amber);} .dot.r{background:var(--red);} .dot.na{background:var(--blue);}
+.badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:3px;border:1px solid var(--line);color:var(--ink-dim);}
+.badge.unconf{color:#7f6000;border-color:#bf8f00;background:#fff2cc;}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;cursor:pointer;}
+.s-open{background:#e7e6e6;color:#1a1a1a;}
+.s-progress{background:#ddebf7;color:#1f3864;}
+.s-blocked{background:#f4b7b7;color:#7b1f1f;}
+.s-done{background:#e2efda;color:#1e5c2e;}
+.readybadge{padding:2px 8px;border-radius:10px;font-size:11px;}
+.ready-y{background:#e2efda;color:#1e5c2e;} .ready-n{background:#f4b7b7;color:#7b1f1f;}
+.exc-item{padding:8px 10px;border-bottom:1px solid var(--line);font-size:12.5px;display:flex;justify-content:space-between;gap:10px;}
+.exc-item .tag2{font-size:10px;color:var(--ink-dim);}
+button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:5px 10px;font-size:12px;cursor:pointer;}
+button:hover{background:#e4eaf2;}
+input[type=text],input[type=number],input[type=date],select,textarea{background:#ffffff;border:1px solid var(--line);color:var(--ink);border-radius:3px;padding:4px 6px;font-size:12.5px;}
+.modal-back{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;align-items:flex-start;justify-content:center;overflow:auto;padding:30px 10px;}
+.modal-back.show{display:flex;}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:6px;max-width:900px;width:100%;padding:18px 20px;}
+.modal h3{margin-top:0;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;}
+.fld{margin-bottom:6px;}
+.fld label{display:block;font-size:10.5px;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.03em;}
+.fld .v{font-size:13px;}
+.fld .v.empty{color:var(--ink-faint);font-style:italic;}
+.closebtn{float:right;}
+.settingsbox{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:14px;}
+.gatelist{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 14px;margin:8px 0;}
+.gatelist label{font-size:12px;}
+.discoverylist li{margin-bottom:6px;}
+.roadmap{font-size:12.5px;color:var(--ink-dim);line-height:1.5;}
+.util{display:flex;gap:8px;margin-top:10px;}
+.secthead{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:6px;margin:0 0 10px;}
+.secthead h2{border:none;padding:0;margin:0;}
+.smallnote{font-size:11px;color:var(--ink-faint);margin-top:4px;}
+.jobname{font-weight:bold;}
+.jobsub{color:var(--ink-faint);font-size:10.5px;}
+@media print{
+  .noprint{display:none;}
+  body{background:#fff;color:#000;}
+  .stile,.banner,table,.settingsbox{background:#fff;border-color:#999;}
+}
+</style>
+</head>
+<body>
+
+<header class="app">
+  <div>
+    <h1>DYP PM Dashboard v0.10 DRAFT</h1>
+    <div class="sub">Design Your Price / TH Builds LLC. Operated by Zach in the interim; PM role ownership pending Tanner (PM vs purchasing coordinator, one role or two, still open). v0.10 adds the Field Submissions section, a same-device read of what the Toolbox app writes on Submit, direct build request 8/5/26.</div>
+  </div>
+  <div class="util noprint">
+    <button onclick="exportCSV()">Export CSV</button>
+    <button onclick="window.print()">Print</button>
+    <button onclick="backupJSON()">Backup JSON</button>
+    <button onclick="document.getElementById('restoreFile').click()">Restore JSON</button>
+    <input type="file" id="restoreFile" style="display:none" accept=".json" onchange="restoreJSON(event)">
+  </div>
+</header>
+
+<div class="limitnote noprint">
+  Known limitation: this is a single file tool using local browser storage only. Zach's copy and Tanner's copy will not sync or match each other. Not a shared multi user data source yet. See Roadmap section below for the planned path to v1.5 shared storage. The Field Submissions section further down reads a second local storage key that the Toolbox app writes to on Submit, that only works when this file and the Toolbox file are served from the same domain and opened on the same device or browser, it is a same-device bridge, not a real shared queue.
+</div>
+
+<main>
+
+<section>
+  <h2>Command Strip</h2>
+  <div class="stripwrap" id="stripwrap"></div>
+</section>
+
+<section>
+  <div class="banners">
+    <div class="banner" id="bannerReady"></div>
+    <div class="banner" id="bannerHealth"></div>
+  </div>
+</section>
+
+<section>
+  <div class="secthead"><h2>Tomorrow Lineout Board</h2><button class="noprint" onclick="addLineoutRow()">Add Crew Row</button></div>
+  <table id="lineoutTable">
+    <thead><tr>
+      <th>Crew</th><th>Job</th><th>Gates (click dot to cycle: gray = not entered, green = pass, red = fail)</th><th>Blocker</th><th>Status</th><th class="noprint"></th>
+    </tr></thead>
+    <tbody></tbody>
+  </table>
+  <div class="smallnote">Ready/Blocked is computed from the gates toggled on in Settings. A blank field counts as gate not met, nothing is assumed passing.</div>
+</section>
+
+<section>
+  <div class="secthead"><h2>Active Job Health Grid</h2><button class="noprint" onclick="addNewJob()">Add Job</button></div>
+  <table id="jobGrid">
+    <thead><tr>
+      <th>Job</th><th>Phase</th><th>Sched</th><th>Budget</th><th>WIP</th><th>Materials</th><th>Scope</th><th>Quality</th><th>Tasks</th><th>Freshness</th>
+    </tr></thead>
+    <tbody></tbody>
+  </table>
+  <div class="smallnote">Gray dot = not entered. Click any row to open and edit the full job record.</div>
+</section>
+
+<section>
+  <h2>Exceptions Queue</h2>
+  <div id="exceptions" style="background:var(--panel);border:1px solid var(--line);border-radius:4px;"></div>
+</section>
+
+<section>
+  <div class="secthead"><h2>Field Submissions (from Toolbox)</h2><button class="noprint" onclick="renderFieldSubmissions()">Refresh</button></div>
+  <table id="fieldSubsTable">
+    <thead><tr><th>Job</th><th>Type</th><th>When</th><th>Who</th><th>Summary</th></tr></thead>
+    <tbody id="fieldSubsBody"></tbody>
+  </table>
+  <div class="smallnote">Read directly from this browser's local storage, written there by the Toolbox app's Submit buttons. This does not go through Make.com, and it only fills in when both files are served from the same domain and used on the same device or browser, see the Known Limitation note above. Rows are matched to a job on an exact match only (job name, or the Toolbox Job Label set on that job's Source IDs), unmatched rows show the raw text from the Toolbox instead of a guess.</div>
+</section>
+
+<section>
+  <div class="secthead"><h2>Live Feed (via Make.com)</h2><button class="noprint" onclick="refreshMakeFeed()">Refresh Now</button></div>
+  <table id="makeFeedTable">
+    <thead><tr><th>Job</th><th>Type</th><th>When</th><th>Who</th><th>Summary</th></tr></thead>
+    <tbody id="makeFeedBody"></tbody>
+  </table>
+  <div class="smallnote" id="makeFeedStatus"></div>
+  <div class="smallnote">Pulled over the network from the endpoint Make.com writes to (see MAKE_FEED_URL near the top of the script), not from local storage. Works across devices, unlike the same-device Toolbox bridge above. Rows are matched to a job the same way: exact match on job name or the Toolbox Job Label under Source IDs.</div>
+</section>
+
+<section>
+  <div class="secthead"><h2>PM Action Queue</h2><button class="noprint" onclick="toggleAddItemForm()">Add Action Item</button></div>
+  <div id="addItemForm" class="settingsbox noprint" style="display:none;margin-bottom:10px;">
+    <div class="grid2">
+      <div class="fld"><label>Title</label><input type="text" id="newItemTitle"></div>
+      <div class="fld"><label>Owner</label><input type="text" id="newItemOwner"></div>
+      <div class="fld"><label>Due Date</label><input type="date" id="newItemDue"></div>
+      <div class="fld"><label>Job / Workstream</label><input type="text" id="newItemWs"></div>
+      <div class="fld"><label>Note</label><input type="text" id="newItemNote"></div>
+    </div>
+    <button onclick="addActionItem()">Save Item</button>
+    <button onclick="toggleAddItemForm()">Cancel</button>
+  </div>
+  <div id="actionHeader" style="display:flex;gap:14px;font-size:12px;color:var(--ink-dim);margin-bottom:6px;"></div>
+  <table id="itemsTable">
+    <thead><tr><th>Title</th><th>Owner</th><th>Due</th><th>Status</th><th>Job / Workstream</th><th>Note</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <div class="smallnote noprint">Reuses the Engagement Tracker's item schema and click to cycle status pattern as is (id, title, owner, due, status, workstream, note, timestamp). Click Add Action Item to create a real one; nothing is pre-filled.</div>
+</section>
+
+<section>
+  <h2>Inputs Still Needed Before Next Build Pass</h2>
+  <div class="settingsbox">
+    <ul class="discoverylist">
+      <li>Sample exports: JobTread jobs/tasks/schedule, ControlQore, the field checklist tool, current WIP report, sub scope review, materials tracker, bid vs actual analyzer.</li>
+      <li><b>RESOLVED 07/28/26.</b> Job phase list confirmed: Bidding, Course of Construction, Post Construction, matching ControlQore's live Project Stage field. JobTread has no phase field to reconcile against. The longer design-build and bid-stage sequences in the engagement documents stay as planning and client-facing views, they are not what the dashboard tracks.</li>
+      <li>The specific conditions that make a crew count as ready tomorrow (which gates are mandatory vs optional).</li>
+      <li>The definition of "slipped" for schedule purposes.</li>
+      <li>Which financial fields actually exist today, and where (JobTread vs ControlQore vs neither).</li>
+      <li>Field checklist structure: what checklists exist, who completes them, whether photos are required, what failures block the next phase.</li>
+      <li>Who the first real users of the dashboard will be.</li>
+    </ul>
+    <div class="smallnote">[FOR JASON] The seeded job list below carries forward five candidate jobs from 7/16 field notes (unconfirmed). The master export separately confirms a pilot job named "Carmen." Whether "Carmen John Addition" below is the same job as the confirmed pilot "Carmen" is not stated anywhere reviewed. Confirm before treating these as the same record.</div>
+    <div class="smallnote">[FOR JASON] The Toolbox field app's job dropdown uses different text than these five job names (for example "Carmen John - Addition" there vs "Carmen John Addition" here). The new Field Submissions section below only links a Toolbox entry to a job on an exact text match, nothing is guessed. Set each job's Toolbox Job Label under Source IDs, in that job's detail view, to the exact text from the Toolbox dropdown to link them.</div>
+  </div>
+</section>
+
+<section>
+  <h2>Settings</h2>
+  <div class="settingsbox">
+    <div class="grid2">
+      <div class="fld"><label>Budget variance red line (percent)</label>
+        <input type="number" id="setBudgetRed" placeholder="not set, pending Tanner"></div>
+      <div class="fld"><label>Stale after (days)</label>
+        <input type="number" id="setStaleDays" value="7"></div>
+    </div>
+    <div class="fld"><label>Phase list (confirmed 07/28/26, matches ControlQore Project Stage)</label>
+      <div class="smallnote" id="phaseListDisplay"></div></div>
+    <div class="fld"><label>Readiness gates (toggle which gates count toward Tomorrow Readiness)</label>
+      <div class="gatelist" id="gateList"></div></div>
+    <div class="fld">
+      <label><input type="checkbox" id="confirmRedLines"> Red lines confirmed with Tanner/Zach</label>
+      <label><input type="checkbox" id="confirmGates"> Gate set confirmed</label>
+      <label><input type="checkbox" id="confirmPhases"> Phase list confirmed</label>
+    </div>
+    <button onclick="saveSettings()">Save Settings</button>
+  </div>
+</section>
+
+<section>
+  <h2>Roadmap</h2>
+  <div class="settingsbox roadmap">
+    v0.5 (this tier): single file, manual entry, shared job record model, still local browser storage only.<br>
+    v0.10: added a same-device Field Submissions bridge from the Toolbox app (local storage, not a network sync, not Make.com). Do not treat this as the v1.5 shared source below, it only works when both files share a browser and a hosting domain.<br>
+    v1: structured CSV import (JobTread jobs/tasks/schedule export, ControlQore cost export, field checklist tool export, bid vs actual analyzer output). Field observation metrics (lineout, materials) stay manual because they originate in the field, not in a system.<br>
+    v1.5: a real shared data source so Zach's and Tanner's entries are the same record, not separate unsynced copies. This is also where a real cross-device Toolbox to Dashboard sync belongs, not the v0.10 same-device bridge.<br>
+    v2: direct system connections (JobTread API, Manus portal, ControlQore) once access matures. The planned PM auto scheduler, if built, becomes the live feed for the lineout tile at that point, not before.
+  </div>
+</section>
+
+</main>
+
+<div class="modal-back noprint" id="jobModalBack">
+  <div class="modal" id="jobModal"></div>
+</div>
+
+<script>
+const LS_KEY='dyp_pm_dash_v06';
+const LS_KEY_PREV='dyp_pm_dash_v05';
+// Must match the Toolbox file's key exactly, and both files must be served from the
+// same browser origin for this to actually share data. See Known Limitation note.
+const SHAREDKEY='dyp_shared_field_submissions';
+
+// GET endpoint this dashboard polls for data that arrived via Make.com. Backed by
+// /api/make-feed (Vercel function + KV), which Make.com's scenario POSTs into.
+const MAKE_FEED_URL='https://opsapp.bullseyeconsulting.ai/api/make-feed';
+// Must match the MAKE_FEED_SECRET env var on Vercel and the x-api-key header the
+// Make.com scenario sends. Visible to anyone viewing source, same tradeoff as the
+// Toolbox webhook URL - this only gates casual/bot traffic, not a determined reader.
+const MAKE_FEED_KEY='62d39bb44f1e712b1b22c0f2613195246d269f4ddbcce5f040450f59ee0cecec';
+const MAKE_FEED_POLL_MS=30000;
+const STATUSES=['open','progress','blocked','done'];
+const SLABEL={open:'Open',progress:'In Progress',blocked:'Blocked',done:'Done'};
+
+// CONFIRMED 07/28/26 by Jason: the dashboard uses ControlQore's live Project Stage values.
+// JobTread has no phase or stage field at all (verified in JobTread Settings 07/28/26), so
+// ControlQore is the only system in the stack carrying a real stage on real jobs.
+const PHASES=['Bidding','Course of Construction','Post Construction'];
+
+const GATES=[
+  {key:'scope',label:'Scope confirmed',def:true},
+  {key:'crew',label:'Crew assigned',def:true},
+  {key:'sub',label:'Sub confirmed',def:true},
+  {key:'materials',label:'Materials staged',def:true},
+  {key:'checklist',label:'Checklist clear',def:true},
+  {key:'plans',label:'Plans on site',def:false},
+  {key:'access',label:'Site access confirmed',def:false},
+  {key:'inspection',label:'Inspection cleared',def:false},
+  {key:'predecessor',label:'Predecessor task complete',def:false},
+  {key:'equipment',label:'Equipment on site',def:false},
+  {key:'safety',label:'Safety plan reviewed',def:false},
+];
+
+const STATUS_OPTIONS=[
+  {v:'not_entered',l:'Not entered'},
+  {v:'pending',l:'Pending'},
+  {v:'in_progress',l:'In Progress'},
+  {v:'approved',l:'Approved'},
+  {v:'complete',l:'Complete'},
+  {v:'blocked',l:'Blocked'},
+  {v:'failed',l:'Failed'},
+];
+
+const MATERIAL_OPTIONS=[
+  {v:'not_entered',l:'Not entered'},
+  {v:'ready',l:'Ready'},
+  {v:'not_ready',l:'Not Ready'},
+  {v:'na',l:'N/A, self-supplied trade'},
+];
+
+const EVIDENCE_OPTIONS=[
+  {v:'unknown',l:'Unknown'},
+  {v:'assumption',l:'Assumption'},
+  {v:'provisional',l:'Provisional'},
+  {v:'reconciled',l:'Reconciled'},
+  {v:'verified',l:'Verified'},
+];
+
+function esc(v){ return (v==null?'':String(v)).replace(/"/g,'&quot;'); }
+function numv(v){ return v==null?'':v; }
+function numOrNull(v){ return v===''||v==null ? null : Number(v); }
+
+function newJob(id,name,customer,address){
+  return {
+    id, name, customer, address,
+    owner:'Zach (interim)',
+    phase:'',
+    crew:'', subs:[],
+    dates:{planStart:'',planFinish:'',forecastFinish:''},
+    contract:{original:null,changeOrders:null,revised:null},
+    budget:{originalBudget:null,approvedCOs:null,revisedBudget:null,actualCost:null,committedCost:null,etc:null,forecastFinalCost:null,forecastVariance:null,pctComplete:null,grossProfitForecast:null,evidenceStatus:'unknown'},
+    billing:{billedToDate:null,collectedToDate:null,retentionHeld:null},
+    fieldChecklist:{status:'not_entered',lastTrade:'',lastDate:'',openPunch:null},
+    materialStatus:{status:'not_entered',note:''},
+    scopeStatus:{status:'not_entered',note:''},
+    wip:{status:'not_entered',note:'',value:null,asOf:''},
+    changeOrders:{pendingCount:null,approvedCount:null,status:'not_entered'},
+    procurement:{status:'not_entered',note:''},
+    blockers:[], tasks:[],
+    nextMilestone:{name:'',date:''},
+    sourceIds:{jobTread:'',controlQore:'',checklistTool:'',toolboxJobName:''},
+    lastUpdated:null, active:true, confirmed:false
+  };
+}
+
+function seed(){
+  const jobs=[
+    newJob('J-CARMENJOHN','Carmen John Addition','[FOR JASON: confirm customer name]','[FOR JASON: confirm address]'),
+    newJob('J-MONROY','Monroy Remodel','[FOR JASON: confirm customer name]','[FOR JASON: confirm address]'),
+    newJob('J-NATASHA','Natasha Exterior/Stucco','[FOR JASON: confirm customer name]','[FOR JASON: confirm address]'),
+    newJob('J-STEWART','Stewart Deck','[FOR JASON: confirm customer name]','[FOR JASON: confirm address]'),
+    newJob('J-DRAPER','Draper Tile/Brick','[FOR JASON: confirm customer name]','[FOR JASON: confirm address]'),
+  ];
+  const lineout=jobs.map(j=>({
+    id:Math.random().toString(36).slice(2,9),
+    date:'', crew:'', jobId:j.id,
+    gates:{scope:null,crew:null,sub:null,materials:null,checklist:null,plans:null,access:null,inspection:null,predecessor:null,equipment:null,safety:null},
+    blockerNote:''
+  }));
+  return {
+    version:'0.6',
+    settings:{budgetRedPct:null, staleAfterDays:7, redLinesConfirmed:false, gatesConfirmed:false, phasesConfirmed:true,
+      gates:Object.fromEntries(GATES.map(g=>[g.key,g.def]))},
+    jobs, lineout, items:[]
+  };
+}
+
+let db=load();
+
+function load(){
+  let raw=localStorage.getItem(LS_KEY);
+  if(raw) return JSON.parse(raw);
+  let prev=localStorage.getItem(LS_KEY_PREV);
+  if(prev){
+    // v0.5 had a flatter schema; do not attempt silent field-mapping of financial or job data,
+    // since that risks inventing correspondences that were never confirmed. Start clean and flag it.
+    console.warn('v0.5 data found but not auto-migrated: shared job record schema changed. Re-enter or ask Jason for a migration pass.');
+  }
+  return seed();
+}
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(db)); }
+
+function mut(fn){ fn(); db.jobs.forEach(computeForecast); save(); render(); }
+
+// ---------- computed status helpers ----------
+function isStale(job){
+  if(!job.lastUpdated) return true;
+  const days=(Date.now()-job.lastUpdated)/86400000;
+  return days > (db.settings.staleAfterDays||7);
+}
+function schedDot(job){
+  if(!job.dates.planFinish || !job.dates.forecastFinish) return 'gray';
+  if(job.dates.forecastFinish <= job.dates.planFinish) return 'g';
+  return 'r'; // any forecast slip past plan finish, until "slipped" is defined otherwise [FOR JASON]
+}
+function budgetDot(job){
+  const b=job.budget;
+  if(b.forecastVariance==null || db.settings.budgetRedPct==null) return 'gray';
+  const pct = b.revisedBudget ? (b.forecastVariance/b.revisedBudget*100) : null;
+  if(pct==null) return 'gray';
+  if(pct < -db.settings.budgetRedPct) return 'r';
+  if(pct < 0) return 'y';
+  return 'g';
+}
+function simpleDot(status){
+  if(status==='complete'||status==='approved'||status==='ready') return 'g';
+  if(status==='in_progress'||status==='pending') return 'y';
+  if(status==='failed'||status==='blocked') return 'r';
+  return 'gray';
+}
+function materialDot(status){
+  if(status==='ready') return 'g';
+  if(status==='not_ready') return 'r';
+  if(status==='na') return 'na';
+  return 'gray';
+}
+function budgetTitle(job){
+  const b=job.budget;
+  if(b.forecastVariance==null) return 'Budget: not enough data entered';
+  const sign = b.forecastVariance < 0 ? 'over' : 'under';
+  return 'Forecast '+sign+' revised budget by $'+Math.abs(b.forecastVariance).toLocaleString();
+}
+function freshDot(job){ return job.lastUpdated ? (isStale(job)?'r':'g') : 'gray'; }
+function tasksDot(job){ return (job.tasks && job.tasks.length) ? 'y' : 'gray'; }
+
+function computeForecast(job){
+  const b=job.budget;
+  b.revisedBudget = (b.originalBudget!=null && b.approvedCOs!=null) ? (b.originalBudget+b.approvedCOs) : (b.originalBudget!=null?b.originalBudget:null);
+  b.forecastFinalCost = (b.actualCost!=null && b.etc!=null) ? (b.actualCost+b.etc) : null;
+  b.forecastVariance = (b.revisedBudget!=null && b.forecastFinalCost!=null) ? (b.revisedBudget-b.forecastFinalCost) : null;
+  b.grossProfitForecast = (job.contract.revised!=null && b.forecastFinalCost!=null) ? (job.contract.revised-b.forecastFinalCost) : null;
+}
+
+function gateStatus(row){
+  const active=GATES.filter(g=>db.settings.gates[g.key]);
+  let allPass=true, anyEntered=false;
+  active.forEach(g=>{
+    const v=row.gates[g.key];
+    if(v!=null) anyEntered=true;
+    if(v!==true) allPass=false;
+  });
+  if(!anyEntered) return 'unset';
+  return allPass ? 'ready' : 'blocked';
+}
+
+// ---------- render ----------
+function render(){
+  db.jobs.forEach(computeForecast);
+  renderStrip();
+  renderBanners();
+  renderLineout();
+  renderJobGrid();
+  renderExceptions();
+  renderFieldSubmissions();
+  renderItems();
+  renderSettings();
+}
+
+function renderStrip(){
+  const crewsReady = db.lineout.filter(r=>gateStatus(r)==='ready').length;
+  const crewsTotal = db.lineout.length;
+  const jobsAtRisk = db.jobs.filter(j=>['r'].includes(schedDot(j))||['r'].includes(budgetDot(j))).length;
+  const blockers = db.lineout.filter(r=>gateStatus(r)==='blocked').length + db.jobs.reduce((n,j)=>n+(j.blockers?j.blockers.length:0),0);
+  const slipped = db.jobs.filter(j=>schedDot(j)==='r').length;
+  const finRisk = db.jobs.filter(j=>budgetDot(j)==='r').length;
+  const overdueActions = db.items.filter(i=>i.status!=='done' && i.due && i.due < todayStr()).length;
+  const stale = db.jobs.filter(isStale).length;
+  const tiles=[
+    {n:crewsTotal? crewsReady+'/'+crewsTotal : '0/0', l:'Crews Ready Tomorrow', cls:crewsTotal&&crewsReady<crewsTotal?'warn':''},
+    {n:jobsAtRisk, l:'Jobs At Risk', cls:jobsAtRisk?'bad':'ok'},
+    {n:blockers, l:'Critical Blockers', cls:blockers?'bad':'ok'},
+    {n:slipped, l:'Schedule Slippage', cls:slipped?'warn':'ok'},
+    {n:finRisk, l:'Financial Risk', cls:finRisk?'bad':'ok'},
+    {n:overdueActions, l:'Overdue PM Actions', cls:overdueActions?'warn':'ok'},
+    {n:stale, l:'Stale Data (jobs)', cls:stale?'warn':'ok'},
+  ];
+  document.getElementById('stripwrap').innerHTML = tiles.map(t=>
+    `<div class="stile ${t.cls}"><div class="n">${t.n}</div><div class="l">${t.l}</div></div>`).join('');
+}
+
+function renderBanners(){
+  const crewsTotal=db.lineout.length;
+  const crewsReady=db.lineout.filter(r=>gateStatus(r)==='ready').length;
+  const anyBlocked=db.lineout.some(r=>gateStatus(r)==='blocked');
+  let rCls='y', rTxt='Not enough data entered', rDetail='No lineout rows have gate data entered yet.';
+  if(crewsTotal>0){
+    if(anyBlocked){ rCls='r'; rTxt='Not every crew is ready'; rDetail=crewsReady+' of '+crewsTotal+' crew days ready. Review Tomorrow Lineout Board.'; }
+    else if(crewsReady===crewsTotal){ rCls='g'; rTxt='Every scheduled crew is ready'; rDetail=crewsReady+' of '+crewsTotal+' crew days confirmed ready.'; }
+    else { rCls='y'; rTxt='Readiness incomplete'; rDetail=crewsReady+' of '+crewsTotal+' crew days confirmed, rest not yet entered.'; }
+  }
+  document.getElementById('bannerReady').className='banner '+rCls;
+  document.getElementById('bannerReady').innerHTML=`<div class="q">Tomorrow Readiness</div><div class="a">${rTxt}</div><div class="d">${rDetail}</div>`;
+
+  const jobsTotal=db.jobs.filter(j=>j.active).length;
+  const jobsOff = db.jobs.filter(j=>j.active && (schedDot(j)==='r'||budgetDot(j)==='r')).length;
+  const jobsUnset = db.jobs.filter(j=>j.active && (schedDot(j)==='gray'||budgetDot(j)==='gray')).length;
+  let hCls='y', hTxt='Not enough data entered', hDetail='Job health fields are mostly unset.';
+  if(jobsTotal>0){
+    if(jobsOff>0){ hCls='r'; hTxt=jobsOff+' of '+jobsTotal+' jobs outside tolerance'; hDetail='Check schedule and budget dots on the Active Job Health Grid.'; }
+    else if(jobsUnset===0){ hCls='g'; hTxt='All active jobs within tolerance'; hDetail=jobsTotal+' active jobs reviewed, schedule and budget both entered.'; }
+    else { hCls='y'; hTxt='Partial visibility'; hDetail=jobsUnset+' of '+jobsTotal+' jobs missing schedule or budget data.'; }
+  }
+  document.getElementById('bannerHealth').className='banner '+hCls;
+  document.getElementById('bannerHealth').innerHTML=`<div class="q">Portfolio Health</div><div class="a">${hTxt}</div><div class="d">${hDetail}</div>`;
+}
+
+function jobName(id){ const j=db.jobs.find(x=>x.id===id); return j?j.name:'(unassigned)'; }
+
+function renderLineout(){
+  const tb=document.querySelector('#lineoutTable tbody');
+  const activeGates = GATES.filter(g=>db.settings.gates[g.key]);
+  tb.innerHTML = db.lineout.map((r)=>{
+    const gs=gateStatus(r);
+    const badge = gs==='ready'?'<span class="readybadge ready-y">READY</span>' : gs==='blocked'?'<span class="readybadge ready-n">BLOCKED</span>' : '<span class="badge">unset</span>';
+    return `<tr>
+      <td><input type="text" value="${esc(r.crew)}" onchange="updateLineout('${r.id}','crew',this.value)" placeholder="crew name" style="width:100px;"></td>
+      <td><select onchange="updateLineout('${r.id}','jobId',this.value)">
+          <option value="">-- select --</option>
+          ${db.jobs.map(j=>`<option value="${j.id}" ${j.id===r.jobId?'selected':''}>${esc(j.name)}</option>`).join('')}
+        </select></td>
+      <td>${activeGates.map(g=>`<span class="dot ${dotFromGate(r.gates[g.key])}" title="${g.label} (click to cycle: unset / pass / fail)" style="cursor:pointer;margin-right:4px;" onclick="cycleGate('${r.id}','${g.key}')"></span>`).join('')}</td>
+      <td><input type="text" value="${esc(r.blockerNote)}" onchange="updateLineout('${r.id}','blockerNote',this.value)" placeholder="blocker" style="width:120px;"></td>
+      <td>${badge}</td>
+      <td class="noprint"><button onclick="openJob('${r.jobId}')" ${r.jobId?'':'disabled'}>View Job</button> <button onclick="removeLineoutRow('${r.id}')">Remove</button></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" class="smallnote">No lineout rows yet. Click Add Crew Row above.</td></tr>';
+}
+function dotFromGate(v){ if(v==null) return 'gray'; return v===true?'g':'r'; }
+
+function addLineoutRow(){
+  mut(()=>{
+    db.lineout.push({
+      id:Math.random().toString(36).slice(2,9),
+      date:'', crew:'', jobId: db.jobs.length? db.jobs[0].id : '',
+      gates:Object.fromEntries(GATES.map(g=>[g.key,null])),
+      blockerNote:''
+    });
+  });
+}
+function removeLineoutRow(id){
+  if(!confirm('Remove this crew day row?')) return;
+  mut(()=>{ db.lineout = db.lineout.filter(r=>r.id!==id); });
+}
+function updateLineout(id,field,value){
+  mut(()=>{ const r=db.lineout.find(x=>x.id===id); if(r) r[field]=value; });
+}
+function cycleGate(id,key){
+  mut(()=>{
+    const r=db.lineout.find(x=>x.id===id); if(!r) return;
+    const v=r.gates[key];
+    r.gates[key] = v===null ? true : (v===true ? false : null);
+  });
+}
+
+function renderJobGrid(){
+  const tb=document.querySelector('#jobGrid tbody');
+  tb.innerHTML = db.jobs.map(j=>{
+    const unconf = j.confirmed ? '' : ' <span class="badge unconf">unconfirmed</span>';
+    return `<tr class="clickable" onclick="openJob('${j.id}')">
+      <td><span class="jobname">${j.name}</span>${unconf}<div class="jobsub">${j.customer||''}</div></td>
+      <td>${j.phase||'<span class="badge">unset</span>'}</td>
+      <td><span class="dot ${schedDot(j)}"></span></td>
+      <td><span class="dot ${budgetDot(j)}" title="${budgetTitle(j)}"></span></td>
+      <td><span class="dot ${simpleDot(j.wip.status)}" title="${j.wip.value!=null?('WIP $'+j.wip.value.toLocaleString()+(j.wip.asOf?(' as of '+j.wip.asOf):'')):'WIP value not entered'}"></span></td>
+      <td><span class="dot ${materialDot(j.materialStatus.status)}"></span></td>
+      <td><span class="dot ${simpleDot(j.scopeStatus.status)}"></span></td>
+      <td><span class="dot ${simpleDot(j.fieldChecklist.status)}"></span></td>
+      <td><span class="dot ${tasksDot(j)}"></span></td>
+      <td><span class="dot ${freshDot(j)}"></span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderExceptions(){
+  const list=[];
+  db.lineout.forEach(r=>{ if(gateStatus(r)==='blocked') list.push({t:'Lineout blocked: '+jobName(r.jobId)+(r.crew?' / '+r.crew:''), tag:'Tomorrow'}); });
+  db.jobs.forEach(j=>{
+    if(schedDot(j)==='r') list.push({t:j.name+': schedule forecast past plan finish', tag:'Schedule'});
+    if(budgetDot(j)==='r') list.push({t:j.name+': forecast final cost past red line variance', tag:'Budget'});
+    if(isStale(j) && j.lastUpdated) list.push({t:j.name+': data older than '+db.settings.staleAfterDays+' days', tag:'Freshness'});
+    if(j.fieldChecklist.status==='failed') list.push({t:j.name+': field checklist failed', tag:'Quality'});
+    if(j.procurement.status==='blocked') list.push({t:j.name+': procurement blocked', tag:'Procurement'});
+    if(j.changeOrders.status==='pending') list.push({t:j.name+': change order pending decision', tag:'Change Order'});
+  });
+  db.items.forEach(i=>{ if(i.status!=='done' && i.due && i.due<todayStr()) list.push({t:'Overdue: '+i.title, tag:'PM Action'}); });
+  document.getElementById('exceptions').innerHTML = list.length
+    ? list.map(x=>`<div class="exc-item"><span>${x.t}</span><span class="tag2">${x.tag}</span></div>`).join('')
+    : '<div class="exc-item"><span class="smallnote">No exceptions computed from current data.</span></div>';
+}
+
+// ---------- Field Submissions bridge (reads what the Toolbox file writes on Submit) ----------
+function loadSharedSubmissions(){
+  try{
+    const raw = localStorage.getItem(SHAREDKEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ return []; }
+}
+function matchJobForSubmission(sub){
+  return db.jobs.find(j => (j.sourceIds.toolboxJobName && j.sourceIds.toolboxJobName===sub.job) || j.name===sub.job) || null;
+}
+function renderFieldSubmissions(){
+  const subs = loadSharedSubmissions();
+  const tb = document.getElementById('fieldSubsBody');
+  if(!subs.length){
+    tb.innerHTML = '<tr><td colspan="5" class="smallnote">No Toolbox submissions read yet. This only fills in once the Toolbox file is used on this same device/browser, under the same hosted domain as this file.</td></tr>';
+    return;
+  }
+  tb.innerHTML = subs.slice(0,50).map(s=>{
+    const job = matchJobForSubmission(s);
+    const label = job ? esc(job.name) : ('Unmatched job text: "'+esc(s.job||'')+'"');
+    const typeLabel = s.type==='toolbox_end' ? 'Off Site' : 'On Site';
+    const rowAttrs = job ? `class="clickable" onclick="closeJob();openJob('${job.id}')"` : '';
+    return `<tr ${rowAttrs}>
+      <td>${label}</td><td>${typeLabel}</td><td>${s.ts? new Date(s.ts).toLocaleString() : ''}</td><td>${esc(s.who||'')}</td><td>${esc(s.transcript||'')}</td>
+    </tr>`;
+  }).join('');
+}
+window.addEventListener('focus', ()=>{ try{ renderFieldSubmissions(); }catch(e){} });
+
+// ---------- Live feed bridge (reads what Make.com posted to MAKE_FEED_URL) ----------
+async function loadMakeFeed(){
+  const res = await fetch(MAKE_FEED_URL, {method:'GET', headers:{'Accept':'application/json', 'x-api-key':MAKE_FEED_KEY}});
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
+}
+async function refreshMakeFeed(){
+  const statusEl = document.getElementById('makeFeedStatus');
+  const tb = document.getElementById('makeFeedBody');
+  statusEl.textContent = 'Checking Make.com feed...';
+  try{
+    const subs = await loadMakeFeed();
+    if(!subs.length){
+      tb.innerHTML = '<tr><td colspan="5" class="smallnote">No submissions received from Make.com yet.</td></tr>';
+    } else {
+      tb.innerHTML = subs.slice(0,50).map(s=>{
+        const job = matchJobForSubmission(s);
+        const label = job ? esc(job.name) : ('Unmatched job text: "'+esc(s.job||'')+'"');
+        const typeLabel = s.type==='toolbox_end' ? 'Off Site' : 'On Site';
+        const rowAttrs = job ? `class="clickable" onclick="closeJob();openJob('${job.id}')"` : '';
+        return `<tr ${rowAttrs}>
+          <td>${label}</td><td>${typeLabel}</td><td>${s.ts? new Date(s.ts).toLocaleString() : ''}</td><td>${esc(s.who||'')}</td><td>${esc(s.transcript||'')}</td>
+        </tr>`;
+      }).join('');
+    }
+    statusEl.textContent = 'Last checked '+new Date().toLocaleTimeString()+', '+subs.length+' record(s).';
+  }catch(e){
+    statusEl.textContent = 'Could not reach Make.com feed ('+e.message+'). Last successful data, if any, stays shown above.';
+  }
+}
+setInterval(()=>{ refreshMakeFeed(); }, MAKE_FEED_POLL_MS);
+window.addEventListener('focus', ()=>{ refreshMakeFeed(); });
+
+function renderItems(){
+  const active=db.items.filter(i=>i.status!=='done').length;
+  const blocked=db.items.filter(i=>i.status==='blocked').length;
+  const overdue=db.items.filter(i=>i.status!=='done'&&i.due&&i.due<todayStr()).length;
+  const done=db.items.filter(i=>i.status==='done').length;
+  document.getElementById('actionHeader').innerHTML=`<span>Active: ${active}</span><span>Blocked: ${blocked}</span><span>Overdue: ${overdue}</span><span>Done: ${done}</span>`;
+  const tb=document.querySelector('#itemsTable tbody');
+  tb.innerHTML = db.items.map(it=>`<tr>
+      <td>${it.title}</td><td>${it.owner||''}</td><td>${it.due||''}</td>
+      <td><span class="tag s-${it.status}" onclick="event.stopPropagation();cycleItem('${it.id}')">${SLABEL[it.status]}</span></td>
+      <td>${it.ws||''}</td><td>${it.note||''}</td>
+    </tr>`).join('') || '<tr><td colspan="6" class="smallnote">No PM action items yet. Do not invent; add real items only.</td></tr>';
+}
+function cycleItem(id){ mut(()=>{ const it=db.items.find(x=>x.id===id); if(it) it.status=STATUSES[(STATUSES.indexOf(it.status)+1)%STATUSES.length]; }); }
+
+function renderSettings(){
+  document.getElementById('setBudgetRed').value = db.settings.budgetRedPct==null?'':db.settings.budgetRedPct;
+  document.getElementById('setStaleDays').value = db.settings.staleAfterDays;
+  document.getElementById('phaseListDisplay').textContent = PHASES.join(' → ');
+  document.getElementById('gateList').innerHTML = GATES.map(g=>
+    `<label><input type="checkbox" ${db.settings.gates[g.key]?'checked':''} onchange="toggleGate('${g.key}',this.checked)"> ${g.label}</label>`).join('');
+  document.getElementById('confirmRedLines').checked = db.settings.redLinesConfirmed;
+  document.getElementById('confirmGates').checked = db.settings.gatesConfirmed;
+  document.getElementById('confirmPhases').checked = db.settings.phasesConfirmed;
+}
+function toggleGate(key,val){ mut(()=>{ db.settings.gates[key]=val; }); }
+function saveSettings(){
+  mut(()=>{
+    const v=document.getElementById('setBudgetRed').value;
+    db.settings.budgetRedPct = v===''? null : Number(v);
+    db.settings.staleAfterDays = Number(document.getElementById('setStaleDays').value)||7;
+    db.settings.redLinesConfirmed = document.getElementById('confirmRedLines').checked;
+    db.settings.gatesConfirmed = document.getElementById('confirmGates').checked;
+    db.settings.phasesConfirmed = document.getElementById('confirmPhases').checked;
+  });
+}
+
+// ---------- job detail / edit modal ----------
+function phaseSelect(current){
+  return `<select id="f_phase"><option value="">-- unset --</option>` + PHASES.map(p=>`<option value="${esc(p)}" ${p===current?'selected':''}>${esc(p)}</option>`).join('') + `</select>`;
+}
+function statusSelect(id,current){
+  return `<select id="${id}">` + STATUS_OPTIONS.map(o=>`<option value="${o.v}" ${o.v===current?'selected':''}>${o.l}</option>`).join('') + `</select>`;
+}
+function materialSelect(id,current){
+  return `<select id="${id}">` + MATERIAL_OPTIONS.map(o=>`<option value="${o.v}" ${o.v===current?'selected':''}>${o.l}</option>`).join('') + `</select>`;
+}
+function evidenceSelect(id,current){
+  return `<select id="${id}">` + EVIDENCE_OPTIONS.map(o=>`<option value="${o.v}" ${o.v===current?'selected':''}>${o.l}</option>`).join('') + `</select>`;
+}
+
+function openJob(id){
+  const j=db.jobs.find(x=>x.id===id);
+  if(!j) return;
+  const b=j.budget;
+  document.getElementById('jobModal').innerHTML = `
+    <button class="closebtn" onclick="closeJob()">Close</button>
+    <h3>Edit Job ${j.confirmed?'':'<span class="badge unconf">unconfirmed</span>'}</h3>
+    <div class="grid2">
+      <div class="fld"><label>Job ID (fixed)</label><div class="v">${j.id}</div></div>
+      <div class="fld"><label>Confirmed as real / active job</label><label><input type="checkbox" id="f_confirmed" ${j.confirmed?'checked':''}> Confirmed</label></div>
+      <div class="fld"><label>Name</label><input type="text" id="f_name" value="${esc(j.name)}"></div>
+      <div class="fld"><label>Customer</label><input type="text" id="f_customer" value="${esc(j.customer)}"></div>
+      <div class="fld"><label>Address</label><input type="text" id="f_address" value="${esc(j.address)}"></div>
+      <div class="fld"><label>Owner</label><input type="text" id="f_owner" value="${esc(j.owner)}"></div>
+      <div class="fld"><label>Phase (ControlQore Project Stage)</label>${phaseSelect(j.phase)}</div>
+      <div class="fld"><label>Crew</label><input type="text" id="f_crew" value="${esc(j.crew)}"></div>
+      <div class="fld"><label>Subs (comma separated)</label><input type="text" id="f_subs" value="${esc((j.subs||[]).join(', '))}"></div>
+    </div>
+    <h3 style="margin-top:16px;">Schedule</h3>
+    <div class="grid2">
+      <div class="fld"><label>Plan Start</label><input type="date" id="f_planStart" value="${esc(j.dates.planStart)}"></div>
+      <div class="fld"><label>Plan Finish</label><input type="date" id="f_planFinish" value="${esc(j.dates.planFinish)}"></div>
+      <div class="fld"><label>Forecast Finish</label><input type="date" id="f_forecastFinish" value="${esc(j.dates.forecastFinish)}"></div>
+    </div>
+    <h3 style="margin-top:16px;">Financial (illustrative until sources confirmed)</h3>
+    <div class="grid2">
+      <div class="fld"><label>Contract Original</label><input type="number" id="f_contractOriginal" value="${numv(j.contract.original)}"></div>
+      <div class="fld"><label>Contract Change Orders</label><input type="number" id="f_contractCO" value="${numv(j.contract.changeOrders)}"></div>
+      <div class="fld"><label>Original Budget</label><input type="number" id="f_origBudget" value="${numv(b.originalBudget)}"></div>
+      <div class="fld"><label>Approved COs (budget)</label><input type="number" id="f_approvedCOs" value="${numv(b.approvedCOs)}"></div>
+      <div class="fld"><label>Actual Cost</label><input type="number" id="f_actualCost" value="${numv(b.actualCost)}"></div>
+      <div class="fld"><label>Committed Cost (context only, overlap with ETC not yet defined)</label><input type="number" id="f_committedCost" value="${numv(b.committedCost)}"></div>
+      <div class="fld"><label>Estimated Cost to Complete</label><input type="number" id="f_etc" value="${numv(b.etc)}"></div>
+      <div class="fld"><label>Percent Complete</label><input type="number" id="f_pctComplete" value="${numv(b.pctComplete)}"></div>
+      <div class="fld"><label>Financial Evidence Status</label>${evidenceSelect('f_evidenceStatus', b.evidenceStatus||'unknown')}</div>
+    </div>
+    <div class="smallnote">Revised Budget, Forecast Final Cost, Forecast Variance and Gross Profit Forecast are computed automatically on save, not entered directly. Evidence status follows the PM Financial Data Map: Verified, Reconciled, Provisional, Assumption, or Unknown.</div>
+    <h3 style="margin-top:16px;">WIP</h3>
+    <div class="grid2">
+      <div class="fld"><label>WIP Status</label>${statusSelect('f_wipStatus', j.wip.status)}</div>
+      <div class="fld"><label>WIP Value ($, from ControlQore WIP report)</label><input type="number" id="f_wipValue" value="${numv(j.wip.value)}"></div>
+      <div class="fld"><label>WIP As Of (date)</label><input type="date" id="f_wipAsOf" value="${esc(j.wip.asOf)}"></div>
+    </div>
+    <h3 style="margin-top:16px;">Billing</h3>
+    <div class="grid2">
+      <div class="fld"><label>Billed to Date</label><input type="number" id="f_billed" value="${numv(j.billing.billedToDate)}"></div>
+      <div class="fld"><label>Collected to Date</label><input type="number" id="f_collected" value="${numv(j.billing.collectedToDate)}"></div>
+      <div class="fld"><label>Retention Held</label><input type="number" id="f_retention" value="${numv(j.billing.retentionHeld)}"></div>
+    </div>
+    <h3 style="margin-top:16px;">Field / Quality / Procurement / Change Orders</h3>
+    <div class="grid2">
+      <div class="fld"><label>Field Checklist Status</label>${statusSelect('f_checklistStatus', j.fieldChecklist.status)}</div>
+      <div class="fld"><label>Last Trade Checked</label><input type="text" id="f_lastTrade" value="${esc(j.fieldChecklist.lastTrade)}"></div>
+      <div class="fld"><label>Last Checklist Date</label><input type="date" id="f_lastDate" value="${esc(j.fieldChecklist.lastDate)}"></div>
+      <div class="fld"><label>Open Punch Items</label><input type="number" id="f_openPunch" value="${numv(j.fieldChecklist.openPunch)}"></div>
+      <div class="fld"><label>Material Status</label>${materialSelect('f_materialStatus', j.materialStatus.status)}</div>
+      <div class="fld"><label>Sub Scope Review Status</label>${statusSelect('f_scopeStatus', j.scopeStatus.status)}</div>
+      <div class="fld"><label>Procurement Status</label>${statusSelect('f_procurementStatus', j.procurement.status)}</div>
+      <div class="fld"><label>Change Order Status</label>${statusSelect('f_coStatus', j.changeOrders.status)}</div>
+      <div class="fld"><label>Change Orders Pending / Approved (count)</label>
+        <input type="number" id="f_coPending" style="width:45%" value="${numv(j.changeOrders.pendingCount)}" placeholder="pending">
+        <input type="number" id="f_coApproved" style="width:45%" value="${numv(j.changeOrders.approvedCount)}" placeholder="approved">
+      </div>
+    </div>
+    <h3 style="margin-top:16px;">Blockers / Tasks / Milestone</h3>
+    <div class="grid2">
+      <div class="fld"><label>Open Blockers (one per line)</label><textarea id="f_blockers" rows="3" style="width:100%;">${esc((j.blockers||[]).join('\n'))}</textarea></div>
+      <div class="fld"><label>Open Tasks (one per line)</label><textarea id="f_tasks" rows="3" style="width:100%;">${esc((j.tasks||[]).join('\n'))}</textarea></div>
+      <div class="fld"><label>Next Milestone</label><input type="text" id="f_msName" value="${esc(j.nextMilestone.name)}"></div>
+      <div class="fld"><label>Milestone Date</label><input type="date" id="f_msDate" value="${esc(j.nextMilestone.date)}"></div>
+    </div>
+    <h3 style="margin-top:16px;">Source IDs</h3>
+    <div class="grid2">
+      <div class="fld"><label>JobTread ID</label><input type="text" id="f_srcJT" value="${esc(j.sourceIds.jobTread)}"></div>
+      <div class="fld"><label>ControlQore ID</label><input type="text" id="f_srcCQ" value="${esc(j.sourceIds.controlQore)}"></div>
+      <div class="fld"><label>Checklist Tool ID</label><input type="text" id="f_srcCT" value="${esc(j.sourceIds.checklistTool)}"></div>
+      <div class="fld"><label>Toolbox Job Label (exact text from the Toolbox app's job dropdown)</label><input type="text" id="f_srcTBX" value="${esc(j.sourceIds.toolboxJobName)}"></div>
+      <div class="fld"><label>Last Updated</label><div class="v">${j.lastUpdated? new Date(j.lastUpdated).toLocaleString() : 'not entered'}</div></div>
+    </div>
+    <div class="smallnote" style="margin-top:10px;">Field checklist status uses the same category language as the subcontractor trade checklist tool (basic scope / punchlist sections), so this is not meant to become a separate system. Wiring the two together is a v1 input, not yet built.</div>
+    <h3 style="margin-top:16px;">Field Submissions (from Toolbox)</h3>
+    <div id="jobFieldSubs" class="smallnote"></div>
+    <div style="margin-top:14px;">
+      <button onclick="saveJob('${j.id}')">Save Changes</button>
+      <button onclick="closeJob()">Cancel</button>
+    </div>
+  `;
+  document.getElementById('jobModalBack').classList.add('show');
+  const mySubs = loadSharedSubmissions().filter(s => { const m=matchJobForSubmission(s); return m && m.id===j.id; });
+  document.getElementById('jobFieldSubs').innerHTML = mySubs.length
+    ? mySubs.slice(0,20).map(s=>`<div style="margin-bottom:6px;">${s.ts? new Date(s.ts).toLocaleString():''}, ${s.type==='toolbox_end'?'Off Site':'On Site'}, ${esc(s.who||'')}: ${esc(s.transcript||'')}</div>`).join('')
+    : 'No Toolbox submissions matched to this job yet, needs an exact job name or Toolbox Job Label match, and both files served from the same domain.';
+}
+function closeJob(){ document.getElementById('jobModalBack').classList.remove('show'); }
+
+function saveJob(id){
+  mut(()=>{
+    const j=db.jobs.find(x=>x.id===id);
+    if(!j) return;
+    j.confirmed = document.getElementById('f_confirmed').checked;
+    j.name = document.getElementById('f_name').value.trim() || j.name;
+    j.customer = document.getElementById('f_customer').value.trim();
+    j.address = document.getElementById('f_address').value.trim();
+    j.owner = document.getElementById('f_owner').value.trim();
+    j.phase = document.getElementById('f_phase').value;
+    j.crew = document.getElementById('f_crew').value.trim();
+    j.subs = document.getElementById('f_subs').value.split(',').map(s=>s.trim()).filter(Boolean);
+
+    j.dates.planStart = document.getElementById('f_planStart').value;
+    j.dates.planFinish = document.getElementById('f_planFinish').value;
+    j.dates.forecastFinish = document.getElementById('f_forecastFinish').value;
+
+    j.contract.original = numOrNull(document.getElementById('f_contractOriginal').value);
+    j.contract.changeOrders = numOrNull(document.getElementById('f_contractCO').value);
+    j.contract.revised = (j.contract.original!=null && j.contract.changeOrders!=null) ? (j.contract.original+j.contract.changeOrders) : j.contract.original;
+
+    const b=j.budget;
+    b.originalBudget = numOrNull(document.getElementById('f_origBudget').value);
+    b.approvedCOs = numOrNull(document.getElementById('f_approvedCOs').value);
+    b.actualCost = numOrNull(document.getElementById('f_actualCost').value);
+    b.committedCost = numOrNull(document.getElementById('f_committedCost').value);
+    b.etc = numOrNull(document.getElementById('f_etc').value);
+    b.pctComplete = numOrNull(document.getElementById('f_pctComplete').value);
+    b.evidenceStatus = document.getElementById('f_evidenceStatus').value;
+
+    j.billing.billedToDate = numOrNull(document.getElementById('f_billed').value);
+    j.billing.collectedToDate = numOrNull(document.getElementById('f_collected').value);
+    j.billing.retentionHeld = numOrNull(document.getElementById('f_retention').value);
+
+    j.fieldChecklist.status = document.getElementById('f_checklistStatus').value;
+    j.fieldChecklist.lastTrade = document.getElementById('f_lastTrade').value.trim();
+    j.fieldChecklist.lastDate = document.getElementById('f_lastDate').value;
+    j.fieldChecklist.openPunch = numOrNull(document.getElementById('f_openPunch').value);
+
+    j.materialStatus.status = document.getElementById('f_materialStatus').value;
+    j.scopeStatus.status = document.getElementById('f_scopeStatus').value;
+    j.wip.status = document.getElementById('f_wipStatus').value;
+    j.wip.value = numOrNull(document.getElementById('f_wipValue').value);
+    j.wip.asOf = document.getElementById('f_wipAsOf').value;
+    j.procurement.status = document.getElementById('f_procurementStatus').value;
+    j.changeOrders.status = document.getElementById('f_coStatus').value;
+    j.changeOrders.pendingCount = numOrNull(document.getElementById('f_coPending').value);
+    j.changeOrders.approvedCount = numOrNull(document.getElementById('f_coApproved').value);
+
+    j.blockers = document.getElementById('f_blockers').value.split('\n').map(s=>s.trim()).filter(Boolean);
+    j.tasks = document.getElementById('f_tasks').value.split('\n').map(s=>s.trim()).filter(Boolean);
+
+    j.nextMilestone.name = document.getElementById('f_msName').value.trim();
+    j.nextMilestone.date = document.getElementById('f_msDate').value;
+
+    j.sourceIds.jobTread = document.getElementById('f_srcJT').value.trim();
+    j.sourceIds.controlQore = document.getElementById('f_srcCQ').value.trim();
+    j.sourceIds.checklistTool = document.getElementById('f_srcCT').value.trim();
+    j.sourceIds.toolboxJobName = document.getElementById('f_srcTBX').value.trim();
+
+    j.lastUpdated = Date.now();
+  });
+  closeJob();
+}
+
+function addNewJob(){
+  const newId='J-NEW-'+Math.random().toString(36).slice(2,7).toUpperCase();
+  mut(()=>{
+    db.jobs.push(newJob(newId,'New Job (edit me)','',''));
+    db.lineout.push({id:Math.random().toString(36).slice(2,9), date:'', crew:'', jobId:newId, gates:Object.fromEntries(GATES.map(g=>[g.key,null])), blockerNote:''});
+  });
+  openJob(newId);
+}
+
+// ---------- PM action item add form ----------
+function toggleAddItemForm(){
+  const f=document.getElementById('addItemForm');
+  f.style.display = (f.style.display==='none'||!f.style.display) ? 'block' : 'none';
+}
+function addActionItem(){
+  const title=document.getElementById('newItemTitle').value.trim();
+  if(!title){ alert('Title is required.'); return; }
+  mut(()=>{
+    db.items.push({
+      id: Math.random().toString(36).slice(2,9),
+      title,
+      owner: document.getElementById('newItemOwner').value.trim(),
+      due: document.getElementById('newItemDue').value,
+      status:'open',
+      ws: document.getElementById('newItemWs').value.trim(),
+      note: document.getElementById('newItemNote').value.trim(),
+      ts: Date.now()
+    });
+  });
+  ['newItemTitle','newItemOwner','newItemDue','newItemWs','newItemNote'].forEach(fid=>document.getElementById(fid).value='');
+  toggleAddItemForm();
+}
+
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+// ---------- export / backup / restore ----------
+function exportCSV(){
+  let rows=[['Job','Phase','Owner','Sched Status','Revised Budget','Actual Cost','ETC','Forecast Final Cost','Forecast Variance','Pct Complete','Evidence Status','Checklist Status','Material Status','Scope Status','WIP Status','WIP Value','WIP As Of','Procurement Status','Change Order Status','Last Updated']];
+  db.jobs.forEach(j=>{
+    rows.push([j.name,j.phase,j.owner,schedDot(j),j.budget.revisedBudget,j.budget.actualCost,j.budget.etc,j.budget.forecastFinalCost,j.budget.forecastVariance,j.budget.pctComplete,j.budget.evidenceStatus,j.fieldChecklist.status,j.materialStatus.status,j.scopeStatus.status,j.wip.status,j.wip.value,j.wip.asOf,j.procurement.status,j.changeOrders.status,j.lastUpdated?new Date(j.lastUpdated).toISOString():'']);
+  });
+  const csv=rows.map(r=>r.map(v=>`"${(v==null?'':v)}"`).join(',')).join('\n');
+  downloadBlob(csv,'dyp_pm_dashboard_export.csv','text/csv');
+}
+function backupJSON(){ downloadBlob(JSON.stringify(db,null,2),'dyp_pm_dashboard_backup.json','application/json'); }
+function downloadBlob(content,name,type){
+  const blob=new Blob([content],{type});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click();
+}
+function restoreJSON(ev){
+  const f=ev.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{ db=JSON.parse(r.result); save(); render(); } catch(e){ alert('Could not read file: '+e.message); } };
+  r.readAsText(f);
+}
+
+render();
+refreshMakeFeed();
+</script>
+</body>
+</html>
