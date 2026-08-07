@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Design Your Price OS v1.2.1 DRAFT</title>
+<style>
+:root{
+  --navy:#183153;--blue:#2d6cdf;--blue2:#eaf1ff;--green:#26834a;--green2:#eaf6ef;
+  --amber:#b26a00;--amber2:#fff5e5;--red:#b42318;--red2:#fff0ee;--gray:#667085;
+  --ink:#1d2939;--muted:#667085;--line:#e4e7ec;--bg:#f6f8fb;--card:#fff;--purple:#6941c6;
+  --shadow:0 2px 10px rgba(16,24,40,.06);
+}
+*{box-sizing:border-box} body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+button,input,select,textarea{font:inherit}.app{display:grid;grid-template-columns:255px 1fr;min-height:100vh}
+.sidebar{background:#102a43;color:#fff;padding:22px 16px;position:sticky;top:0;height:100vh;overflow:auto}.brand{font-weight:800;font-size:20px;letter-spacing:.2px;margin:0 8px 4px}.brand-sub{font-size:12px;opacity:.72;margin:0 8px 24px}.nav button{width:100%;text-align:left;border:0;background:transparent;color:#d8e4ef;padding:10px 12px;border-radius:8px;cursor:pointer;margin:2px 0}.nav button:hover,.nav button.active{background:#1f4668;color:#fff}.nav .small{font-size:11px;text-transform:uppercase;opacity:.55;padding:18px 12px 6px}
+.main{padding:24px 28px 50px;min-width:0}.topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}.title h1{margin:0;font-size:26px;color:var(--navy)}.title p{margin:5px 0 0;color:var(--muted);font-size:13px}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:9px 12px;border-radius:8px;cursor:pointer}.btn:hover{background:#f9fafb}.btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}.btn.green{background:var(--green);border-color:var(--green);color:#fff}.btn.danger{color:var(--red)}
+.syncbar{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:flex;gap:10px;align-items:center;justify-content:space-between;box-shadow:var(--shadow);margin-bottom:16px}.syncbar .left{display:flex;gap:9px;align-items:center;font-size:13px}.dot{width:9px;height:9px;border-radius:50%;background:var(--amber)}.dot.live{background:var(--green)}
+.cards{display:grid;grid-template-columns:repeat(5,minmax(135px,1fr));gap:12px;margin-bottom:16px}.metric{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:14px;box-shadow:var(--shadow)}.metric .label{font-size:12px;color:var(--muted)}.metric .value{font-size:26px;font-weight:800;margin-top:4px}.metric .sub{font-size:11px;color:var(--muted);margin-top:3px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}.panel-head h2{font-size:16px;margin:0;color:var(--navy)}.panel-body{padding:14px 16px}.filters{display:grid;grid-template-columns:2fr repeat(4,1fr);gap:8px}.filters input,.filters select,.modal input,.modal select,.modal textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}.workgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.workcard{border:1px solid var(--line);border-radius:10px;padding:13px;background:#fff}.workcard .row{display:flex;justify-content:space-between;align-items:center;gap:8px}.workcard h3{font-size:14px;margin:0}.progress{height:8px;background:#edf1f5;border-radius:99px;overflow:hidden;margin:12px 0 8px}.progress>span{display:block;height:100%;background:var(--blue)}.mini{font-size:12px;color:var(--muted)}
+.tablewrap{overflow:auto}.tasktable{width:100%;border-collapse:collapse;min-width:1020px}.tasktable th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);text-align:left;padding:10px;border-bottom:1px solid var(--line);background:#fafbfc}.tasktable td{padding:10px;border-bottom:1px solid #eef1f4;vertical-align:top;font-size:13px}.tasktable tr:hover{background:#fbfcfe}.task-title{font-weight:650}.task-note{font-size:11px;color:var(--muted);margin-top:3px}.badge{display:inline-flex;align-items:center;padding:4px 7px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}.b-notstarted{background:#f2f4f7;color:#475467}.b-inprogress{background:var(--blue2);color:#2458b8}.b-waiting{background:var(--amber2);color:#8a5100}.b-blocked{background:var(--red2);color:var(--red)}.b-complete{background:var(--green2);color:var(--green)}.b-review{background:#f3eeff;color:var(--purple)}.p-critical{color:var(--red);font-weight:800}.p-high{color:var(--amber);font-weight:700}.p-medium{color:var(--blue);font-weight:700}.p-low{color:var(--gray)}.row-actions button{border:0;background:transparent;cursor:pointer;color:var(--blue);padding:2px 5px}
+.startbox{background:#eef4ff;border:1px solid #bfd0f6;border-radius:12px;padding:14px 16px;margin-bottom:16px}.startbox .eyebrow{font-size:11px;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em}.startbox .next{font-size:18px;font-weight:800;color:var(--navy);margin-top:4px}.startbox .meta{font-size:12px;color:var(--muted);margin-top:4px}
+.pathgrid{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:10px}.stepcard{border:1px solid var(--line);border-radius:10px;padding:12px;background:#fff}.stepcard .num{font-size:11px;font-weight:800;color:var(--blue);text-transform:uppercase}.stepcard h3{font-size:14px;margin:4px 0;color:var(--navy)}.stepcard .count{font-size:12px;color:var(--muted)}.stepcard .progress{margin:9px 0 7px}.factgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.fact{border:1px solid var(--line);border-radius:9px;padding:10px;background:#fbfcfe}.fact strong{display:block;color:var(--navy);font-size:12px;margin-bottom:3px}.fact span{font-size:12px;color:#475467}.parked{background:#fff8e8;border:1px solid #f2d394;border-radius:9px;padding:10px 12px;font-size:12px;color:#6f4b00;margin-top:10px}.feed{display:grid;gap:8px}.feeditem{border-left:3px solid var(--blue);padding:7px 10px;background:#fafcff;border-radius:0 8px 8px 0}.feeditem .meta{font-size:11px;color:var(--muted);margin-bottom:3px}.empty{color:var(--muted);font-size:13px;padding:18px;text-align:center}.hidden{display:none!important}
+.modal-backdrop{position:fixed;inset:0;background:rgba(16,24,40,.52);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}.modal-backdrop.show{display:flex}.modal{background:#fff;border-radius:14px;max-width:720px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 24px 60px rgba(0,0,0,.2)}.modal-head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.modal-head h3{margin:0}.modal-body{padding:16px 18px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.formgrid .full{grid-column:1/-1}.modal-foot{padding:14px 18px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}.label{display:block;font-size:12px;font-weight:700;color:#344054;margin-bottom:5px}
+.toast{position:fixed;right:20px;bottom:20px;background:#101828;color:#fff;padding:11px 14px;border-radius:9px;box-shadow:var(--shadow);display:none;z-index:80;font-size:13px}.toast.show{display:block}
+@media(max-width:1100px){.cards{grid-template-columns:repeat(3,1fr)}.pathgrid{grid-template-columns:repeat(2,1fr)}.workgrid{grid-template-columns:1fr 1fr}.filters{grid-template-columns:1fr 1fr}}
+@media(max-width:760px){.app{grid-template-columns:1fr}.pathgrid,.factgrid{grid-template-columns:1fr}.sidebar{position:relative;height:auto}.nav{display:flex;overflow:auto}.nav .small{display:none}.nav button{white-space:nowrap;width:auto}.main{padding:18px 12px}.topbar{flex-direction:column}.cards{grid-template-columns:1fr 1fr}.workgrid{grid-template-columns:1fr}.filters{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.formgrid .full{grid-column:auto}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">Design Your Price OS</div>
+    <div class="brand-sub">This week: Head PM launch and Ops deployment</div>
+    <div class="nav">
+      <button class="active" data-view="dashboard">This Week</button>
+      <div class="small">Execution Steps</div>
+      <button data-workstream="Finance Foundation">1. Finance Foundation</button>
+      <button data-workstream="Head PM System">2. Head PM System</button>
+      <button data-workstream="OpsVoice">3. OpsVoice</button>
+      <button data-workstream="PM Dashboard">4. PM Dashboard</button>
+      <button data-workstream="Pilot & Handoff">5. Pilot & Handoff</button>
+      <button data-workstream="Sales Dependency">Sales Dependency Only</button>
+      <div class="small">Views</div>
+      <button data-special="waiting">Waiting on Client</button>
+      <button data-special="completed">Completed</button>
+      <button data-special="activity">Activity Feed</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="title"><h1>This Week Ops Deployment Plan</h1><p>Design Your Price | July 27 to July 31, 2026 | Head PM target start: August 3</p></div>
+      <div class="actions"><button class="btn" id="exportBtn">Export Data</button><button class="btn" id="importBtn">Import Data</button><button class="btn" id="resetBtn">Reload This Week Plan</button><button class="btn" id="cloudBtn">Cloud Sync</button><button class="btn primary" id="addBtn">Add Action</button></div>
+    </div>
+
+    <div class="syncbar">
+      <div class="left"><span id="syncDot" class="dot"></span><strong id="syncStatus">Local mode</strong><span id="syncDetail">Changes save in this browser. Connect Supabase for live multi-user sharing.</span></div>
+      <button class="btn" id="copySummaryBtn">Copy Friday Handoff Summary</button>
+    </div>
+
+    <section id="dashboardView">
+      <div class="startbox" id="startHere"></div>
+      <div class="cards" id="metrics"></div>
+      <div class="panel"><div class="panel-head"><h2>Execution Path</h2><span class="mini">Finish the current step before expanding scope</span></div><div class="panel-body"><div class="pathgrid" id="executionCards"></div></div></div>
+      <div class="panel"><div class="panel-head"><h2>Locked Facts for This Week</h2><span class="mini">Do not reopen these unless the client changes the decision</span></div><div class="panel-body"><div class="factgrid">
+        <div class="fact"><strong>Head PM Seat</strong><span>Mike is the Head Project Manager. Target start is August 3. The role and six performance areas are already defined in the offer letter.</span></div>
+        <div class="fact"><strong>Materials</strong><span>DYP supplies materials by default. Trades that supply their own materials use N/A in the PM Dashboard material-readiness field.</span></div>
+        <div class="fact"><strong>Warehouse</strong><span>One warehouse. Office consolidation is a separate issue and is not a PM Dashboard design question.</span></div>
+        <div class="fact"><strong>QC</strong><span>Use the start checklist for current field deployment. The approximately 1,000-point QC framework is a later Head PM dashboard tool.</span></div>
+        <div class="fact"><strong>Daily Field Communication</strong><span>OpsVoice is the streamlined daily check-in, issue-reporting, communication and QC layer replacing the eliminated daily meeting.</span></div>
+        <div class="fact"><strong>OpsVoice Build Direction</strong><span>Deploy the standalone field app now. Connect it to the PM Dashboard through the shared issue queue. Embedding the mic inside other tools can wait.</span></div>
+      </div><div class="parked"><strong>Parked until Ops is usable:</strong> sales dashboard rebuild, full sales portal redesign, CEO dashboard, 1,000-point QC buildout, and live API integration. Keep only the Bid Portal CSV export moving because it is a direct downstream data dependency.</div></div></div>
+      <div class="panel"><div class="panel-head"><h2>Step Health</h2><span class="mini">Progress is based on action status</span></div><div class="panel-body"><div class="workgrid" id="workstreamCards"></div></div></div>
+    </section>
+
+    <div class="panel">
+      <div class="panel-head"><h2 id="taskHeading">This Week Action Register</h2><button class="btn" id="clearFilters">Clear filters</button></div>
+      <div class="panel-body"><div class="filters">
+        <input id="search" placeholder="Search actions, notes, owners..." />
+        <select id="workstreamFilter"><option value="">All workstreams</option></select>
+        <select id="statusFilter"><option value="">All statuses</option></select>
+        <select id="ownerFilter"><option value="">All owners</option></select>
+        <select id="priorityFilter"><option value="">All priorities</option></select>
+      </div></div>
+      <div class="tablewrap"><table class="tasktable"><thead><tr><th>Action</th><th>Workstream</th><th>Status</th><th>Owner</th><th>Due</th><th>Priority</th><th>Next Step / Evidence</th><th></th></tr></thead><tbody id="taskRows"></tbody></table></div>
+    </div>
+
+    <div class="panel"><div class="panel-head"><h2>Activity Feed</h2><button class="btn" id="addUpdateBtn">Log Update</button></div><div class="panel-body"><div class="feed" id="activityFeed"></div></div></div>
+  </main>
+</div>
+
+<input id="fileInput" type="file" accept="application/json" class="hidden" />
+<div class="modal-backdrop" id="taskModal"><div class="modal">
+  <div class="modal-head"><h3 id="modalTitle">Add Action</h3><button class="btn" onclick="closeModal('taskModal')">Close</button></div>
+  <div class="modal-body"><div class="formgrid">
+    <div class="full"><label class="label">Action</label><input id="fTitle" /></div>
+    <div><label class="label">Workstream</label><select id="fWorkstream"></select></div>
+    <div><label class="label">Status</label><select id="fStatus"></select></div>
+    <div><label class="label">Owner</label><select id="fOwner" title="Choose a standardized owner or owner pair"></select></div>
+    <div><label class="label">Due date</label><input id="fDue" type="date" /></div>
+    <div><label class="label">Priority</label><select id="fPriority"></select></div>
+    <div><label class="label">Client decision needed?</label><select id="fDecision"><option>No</option><option>Yes</option></select></div>
+    <div class="full"><label class="label">Next step / evidence required</label><textarea id="fNext" rows="3"></textarea></div>
+    <div class="full"><label class="label">Notes / source</label><textarea id="fNotes" rows="3"></textarea></div>
+  </div></div>
+  <div class="modal-foot"><button class="btn danger hidden" id="deleteTaskBtn">Delete</button><button class="btn" onclick="closeModal('taskModal')">Cancel</button><button class="btn green" id="saveTaskBtn">Save Action</button></div>
+</div></div>
+
+<div class="modal-backdrop" id="updateModal"><div class="modal">
+  <div class="modal-head"><h3>Log Update</h3><button class="btn" onclick="closeModal('updateModal')">Close</button></div>
+  <div class="modal-body"><div class="formgrid"><div><label class="label">Name</label><input id="uName" value="Jason" /></div><div><label class="label">Related action</label><select id="uTask"></select></div><div class="full"><label class="label">Update</label><textarea id="uText" rows="5" placeholder="What changed, what was completed, or what is now blocked?"></textarea></div></div></div>
+  <div class="modal-foot"><button class="btn" onclick="closeModal('updateModal')">Cancel</button><button class="btn green" id="saveUpdateBtn">Add Update</button></div>
+</div></div>
+
+<div class="modal-backdrop" id="cloudModal"><div class="modal">
+  <div class="modal-head"><h3>Cloud Sync Setup</h3><button class="btn" onclick="closeModal('cloudModal')">Close</button></div>
+  <div class="modal-body">
+    <p style="font-size:13px;color:var(--muted);margin-top:0">Enter a Supabase project URL and anonymous key. Everyone using the same credentials and workspace ID will see the same live data.</p>
+    <div class="formgrid"><div class="full"><label class="label">Supabase URL</label><input id="cUrl" placeholder="https://xxxxx.supabase.co" /></div><div class="full"><label class="label">Supabase anon key</label><textarea id="cKey" rows="4"></textarea></div><div><label class="label">Workspace ID</label><input id="cWorkspace" value="design-your-price" /></div><div><label class="label">Display name</label><input id="cName" value="Jason" /></div></div>
+    <details style="margin-top:14px"><summary style="cursor:pointer;font-weight:700">Required Supabase table</summary><pre style="white-space:pre-wrap;background:#f8fafc;padding:10px;border-radius:8px;font-size:11px">create table dyp_workspace (
+  workspace_id text primary key,
+  payload jsonb not null,
+  updated_at timestamptz default now()
+);
+
+alter table dyp_workspace enable row level security;
+create policy "public read" on dyp_workspace for select using (true);
+create policy "public insert" on dyp_workspace for insert with check (true);
+create policy "public update" on dyp_workspace for update using (true);</pre></details>
+  </div>
+  <div class="modal-foot"><button class="btn danger" id="disconnectBtn">Disconnect</button><button class="btn green" id="connectBtn">Connect and Sync</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const LS='dyp_os_v1_2_1_data', CFG='dyp_os_v1_2_1_cloud';
+const WORKSTREAMS=['Finance Foundation','Head PM System','OpsVoice','PM Dashboard','Pilot & Handoff','Sales Dependency'];
+const STATUSES=['Not Started','In Progress','Waiting','Blocked','Review','Complete'];
+const PRIORITIES=['Critical','High','Medium','Low'];
+const OWNER_ORDER=['Jason','Tanner','Zach','Mike','Chelsea','Haley','McKay','Maria','Bookkeeper'];
+const OWNER_OPTIONS=['Unassigned','Jason','Tanner','Zach','Mike','Chelsea','Haley','McKay','Maria','Bookkeeper','Jason / Tanner','Jason / Zach','Jason / Mike','Jason / Chelsea','Jason / Haley','Chelsea / Haley','Tanner / Zach','Tanner / Mike','Zach / Mike','Jason / Tanner / Zach'];
+const STEP_META=[
+  {workstream:'Finance Foundation',label:'Step 1',title:'Finance Foundation',goal:'Lock the current cost, WIP and cash inputs the PM tools are allowed to use.'},
+  {workstream:'Head PM System',label:'Step 2',title:'Head PM System',goal:'Map the real job workflow and turn the offer-letter role into a daily and weekly operating rhythm.'},
+  {workstream:'OpsVoice',label:'Step 3',title:'OpsVoice Deploy',goal:'Get field updates off the phone and into one shared PM-owned queue.'},
+  {workstream:'PM Dashboard',label:'Step 4',title:'PM Dashboard',goal:'Load real jobs and show tomorrow readiness, portfolio health, WIP and financial risk.'},
+  {workstream:'Pilot & Handoff',label:'Step 5',title:'Pilot & Handoff',goal:'Prove one real loop and hand Mike a system he can operate on August 3.'}
+];
+const seedTasks=[
+['Export ControlQore P&L, Trial Balance, GL, AR/AP and WIP at one cutoff','Finance Foundation','In Progress','Jason','2026-07-28','Critical','Use one cutoff date. These become the current finance source package for Ops and the PM Dashboard.','Finance plan requires ControlQore full-period exports. ControlQore remains the cost source of truth.'],
+['Finish the Chelsea and Haley reconciliation interview package and run the review','Finance Foundation','In Progress','Jason','2026-07-28','Critical','Close the remaining questions on owner comp, Bank Charges, Uncategorized lines, job tagging and open reconciliation items.','This is the financial fact-finding step, not a new model build.'],
+['Close the known finance anomalies that change job economics','Finance Foundation','Waiting','Chelsea / Haley','2026-07-31','Critical','Resolve owner comp treatment, negative Bank Charges, Uncategorized income/expense and any remaining bookkeeping explanations.','Keep unresolved items visibly provisional until answered.'],
+['Complete untagged COGS and Project Unknown tagging','Finance Foundation','In Progress','Chelsea / Haley','2026-08-01','Critical','Tag $505,570 untagged COGS plus $161,406 Project Unknown so true COGS and break-even can be finalized.','8/1 deadline is on record in the Finance plan.'],
+['Publish the PM Financial Data Map','Finance Foundation','Not Started','Jason','2026-07-29','High','Document: JobTread budget and operating structure; ControlQore actual cost and WIP; calculated forecast fields; source date and evidence status.','Do not use JobTread Actual Cost as financial truth.'],
+
+['Walk one real job end to end with Tanner and Zach','Head PM System','Not Started','Jason / Tanner / Zach','2026-07-28','Critical','Interview the workflow from sold handoff through closeout: inputs, owner, proof of completion, blockers, escalation and the number the PM watches.','Do not re-ask whether the Head PM role exists or what the six performance areas are. Those are already defined.'],
+['Publish the Head PM Daily and Weekly Operating Checklist','Head PM System','Not Started','Jason','2026-07-29','Critical','Translate the workflow into daily readiness checks plus the Monday owner-report cadence required by the Head PM role.','Tie the checklist to schedule, quality, team, subs/pre-con, budget/cost and client communication.'],
+['Define the Head PM escalation rules to Tanner','Head PM System','Not Started','Jason','2026-07-29','High','Capture the offer-letter sign-off triggers and any additional workflow escalations discovered in the Tanner/Zach interview.','Offer letter already requires owner awareness/sign-off for defined scope, subcontractor, client and inspection escalations.'],
+
+['Wire OpsVoice submissions into one shared central queue','OpsVoice','Not Started','Jason','2026-07-29','Critical','A field submission must leave the phone and appear in one shared queue with job, submitter, category, priority, owner, status, timestamp and attachments.','This is the minimum deployment gate. Stop adding prototype features until this works.'],
+['Add required Job selection and simple daily check-in / issue categories','OpsVoice','Not Started','Jason','2026-07-29','Critical','Every submission must attach to a real job. Keep the field choices simple: Daily Check-In, Issue/Blocker, Quality, Material, Schedule, Customer, Safety, Other.','Use current workflow terminology and keep field friction low.'],
+['Use the start checklist as the current field QC standard','OpsVoice','Review','Jason / Zach','2026-07-29','High','Keep the field deployment focused on the start checklist and evidence capture. Do not deploy the 1,000-point Head PM QC framework to field users this week.','This reflects the current decision for rollout.'],
+['Name 2 to 3 field/sub pilot users and run the first OpsVoice feedback cycle','OpsVoice','Not Started','Jason / Zach','2026-07-30','Critical','Run real daily check-ins and issue reports, then record what users could not understand, would not use, or needed changed.','The Ops plan requires real feedback before treating the tool as operational.'],
+['Connect OpsVoice open issues to the PM action / exception queue','OpsVoice','Not Started','Jason','2026-07-31','Critical','An actionable field report must become a visible PM-owned item with status and resolution, not just a voice recording.','This replaces the lost coordination function of the eliminated daily meeting.'],
+
+['Load the current active jobs into the PM Dashboard','PM Dashboard','Not Started','Jason / Zach','2026-07-29','Critical','Replace sample/practice records with the current active-job list and one shared job ID per job.','The current prototype structure works, but sample/local-only data is not deployment.'],
+['Add material readiness values: Ready, Not Ready, N/A','PM Dashboard','Not Started','Jason','2026-07-29','High','Default to company-supplied materials. Use N/A for trades such as drywall or paint when the trade supplies its own materials.','Do not create a separate warehouse design question.'],
+['Add the PM financial feed and WIP fields','PM Dashboard','Not Started','Jason','2026-07-30','Critical','Show revised budget, ControlQore actual cost, WIP, forecast remaining cost, forecast final cost, forecast variance, billing status and data date/evidence status.','Financial status must clearly distinguish verified/reconciled/provisional information.'],
+['Make Tomorrow Readiness and Active Job Health the two main PM views','PM Dashboard','In Progress','Jason','2026-07-30','Critical','Tomorrow view: crew/job/scope/material/start QC/blocker. Portfolio view: job/phase/schedule/field/QC/material/WIP/cost forecast/action.','Keep the screen exception-focused and fast to scan.'],
+['Make the Dashboard produce Mike’s Monday status-report inputs','PM Dashboard','Not Started','Jason','2026-07-31','High','Surface schedule, inspections/QC, subcontractor issues, budget variances, WIP, client issues, JPM notes and decisions needed from Tanner.','Directly supports the weekly reporting cadence in the offer letter.'],
+
+['Run one complete real-job loop: Dashboard to field to OpsVoice to PM resolution','Pilot & Handoff','Not Started','Jason / Zach','2026-07-31','Critical','Prove: PM plans work, field checks in, issue enters OpsVoice, PM owns it, status resolves, Dashboard reflects the result.','This is the deployment test.'],
+['Prepare Mike’s August 3 handoff package','Pilot & Handoff','Not Started','Jason','2026-07-31','Critical','Give Mike: role framework, daily/weekly checklist, PM Dashboard access, OpsVoice workflow, current job list, Monday report format and escalation rules.','The goal is a functioning operating system, not a folder of unrelated tools.'],
+['Confirm Mike can run the operating rhythm without Jason driving it','Pilot & Handoff','Not Started','Jason / Mike','2026-08-03','High','Have Mike execute the daily readiness check and identify the Monday report inputs himself. Log gaps for the 30-day review baseline.','Offer letter sets 30-day and 90-day review cadence.'],
+
+['Obtain the Bid Portal CSV export from Maria','Sales Dependency','Waiting','Maria','2026-07-27','Critical','Export Projects, Vendors, Bid Requests with status/amounts, and Awarded bids. Mark complete if already received.','Keep this moving because it unlocks downstream PM/job-costing data flow. All other Sales build work stays parked this week.']
+].map((r,i)=>({id:'T'+(i+1),title:r[0],workstream:r[1],status:r[2],owner:r[3],due:r[4],priority:r[5],next:r[6],notes:r[7],decision:'No',updated:new Date().toISOString()}));
+const seed={tasks:seedTasks,activity:[{id:'A1',ts:new Date().toISOString(),by:'System',text:'v1.2 reset around this week’s execution sequence: Finance foundation, Head PM system, OpsVoice deployment, PM Dashboard, then pilot and handoff. Sales is parked except the Bid Portal CSV dependency.',taskId:''}]};
+let data=load(),editId=null,supa=null,channel=null;
+function freshSeed(){return JSON.parse(JSON.stringify(seed))}
+function load(){try{const x=JSON.parse(localStorage.getItem(LS));if(x&&Array.isArray(x.tasks)&&x.tasks.length>0)return x}catch(e){}return freshSeed()}
+function saveLocal(){localStorage.setItem(LS,JSON.stringify(data))}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+function badgeClass(s){return 'b-'+s.toLowerCase().replace(/ /g,'')}
+function score(s){return {Complete:1,Review:.85,'In Progress':.55,Waiting:.35,Blocked:.15,'Not Started':0}[s]||0}
+function daysLate(d,s){if(!d||s==='Complete')return false;return new Date(d+'T23:59:59')<new Date()}
+function uniq(k){return [...new Set(data.tasks.map(t=>t[k]).filter(Boolean))].sort()}
+function fillSelect(id,vals,keep=true){const el=document.getElementById(id),cur=el.value;el.innerHTML=(keep?'<option value="">All '+id.replace('Filter','').toLowerCase()+'s</option>':'')+vals.map(v=>`<option>${v}</option>`).join('');if(vals.includes(cur))el.value=cur}
+function normalizeOwner(owner){
+  const raw=String(owner||'').trim();
+  if(!raw||raw==='Unassigned')return 'Unassigned';
+  const parts=[...new Set(raw.split('/').map(x=>x.trim()).filter(Boolean))];
+  parts.sort((a,b)=>{const ai=OWNER_ORDER.indexOf(a),bi=OWNER_ORDER.indexOf(b);return (ai<0?999:ai)-(bi<0?999:bi)||a.localeCompare(b)});
+  const canonical=parts.join(' / ');
+  return OWNER_OPTIONS.includes(canonical)?canonical:'Unassigned';
+}
+function normalizeOwners(){let changed=false;for(const t of data.tasks){const n=normalizeOwner(t.owner);if(t.owner!==n){t.owner=n;changed=true}}return changed}
+function render(){normalizeOwners();saveLocal();renderFilters();renderStartHere();renderMetrics();renderExecution();renderWorkstreams();renderTasks();renderFeed();renderUpdateTaskOptions()}
+function renderFilters(){fillSelect('workstreamFilter',WORKSTREAMS);fillSelect('statusFilter',STATUSES);fillSelect('ownerFilter',OWNER_OPTIONS.filter(x=>x!=='Unassigned'));fillSelect('priorityFilter',PRIORITIES)}
+function renderStartHere(){const open=data.tasks.filter(t=>t.status!=='Complete').sort((a,b)=>{const ai=WORKSTREAMS.indexOf(a.workstream),bi=WORKSTREAMS.indexOf(b.workstream);return ai-bi||PRIORITIES.indexOf(a.priority)-PRIORITIES.indexOf(b.priority)||String(a.due).localeCompare(String(b.due))});const t=open[0];document.getElementById('startHere').innerHTML=t?`<div class="eyebrow">Start here now</div><div class="next">${esc(t.title)}</div><div class="meta">${esc(t.workstream)} | ${esc(t.owner)} | target ${t.due||'not set'} | ${esc(t.next||'')}</div>`:`<div class="eyebrow">This week complete</div><div class="next">All deployment actions are marked complete.</div>`}
+function renderMetrics(){const total=data.tasks.length,complete=data.tasks.filter(t=>t.status==='Complete').length,critical=data.tasks.filter(t=>t.priority==='Critical'&&t.status!=='Complete').length,blocked=data.tasks.filter(t=>['Waiting','Blocked'].includes(t.status)&&t.status!=='Complete').length,ops=data.tasks.filter(t=>['OpsVoice','PM Dashboard','Pilot & Handoff'].includes(t.workstream)),opsDone=ops.filter(t=>t.status==='Complete').length;const pct=Math.round(complete/Math.max(total,1)*100);document.getElementById('metrics').innerHTML=[['Week Complete',pct+'%',complete+' of '+total+' actions'],['Critical Open',critical,'work the sequence, not everything'],['Waiting / Blocked',blocked,'external dependency'],['Ops Deployment',opsDone+'/'+ops.length,'OpsVoice + PM Dashboard + pilot'],['Head PM Start','Aug 3','Mike handoff target']].map(x=>`<div class="metric"><div class="label">${x[0]}</div><div class="value">${x[1]}</div><div class="sub">${x[2]}</div></div>`).join('')}
+function renderExecution(){document.getElementById('executionCards').innerHTML=STEP_META.map(m=>{const ts=data.tasks.filter(t=>t.workstream===m.workstream),done=ts.filter(t=>t.status==='Complete').length,p=Math.round(done/Math.max(ts.length,1)*100);return `<div class="stepcard"><div class="num">${m.label}</div><h3>${m.title}</h3><div class="count">${done} of ${ts.length} complete</div><div class="progress"><span style="width:${p}%"></span></div><div class="mini">${m.goal}</div></div>`}).join('')}
+function renderWorkstreams(){document.getElementById('workstreamCards').innerHTML=WORKSTREAMS.map(w=>{const ts=data.tasks.filter(t=>t.workstream===w),done=ts.filter(t=>t.status==='Complete').length,p=Math.round(done/Math.max(ts.length,1)*100),wait=ts.filter(t=>['Waiting','Blocked'].includes(t.status)).length,crit=ts.filter(t=>t.priority==='Critical'&&t.status!=='Complete').length;return `<div class="workcard"><div class="row"><h3>${w}</h3><strong>${p}%</strong></div><div class="progress"><span style="width:${p}%"></span></div><div class="mini">${done}/${ts.length} complete | ${crit} critical open | ${wait} waiting</div></div>`}).join('')}
+function filtered(){const q=document.getElementById('search').value.toLowerCase(),w=document.getElementById('workstreamFilter').value,s=document.getElementById('statusFilter').value,o=document.getElementById('ownerFilter').value,p=document.getElementById('priorityFilter').value;return data.tasks.filter(t=>(!q||Object.values(t).join(' ').toLowerCase().includes(q))&&(!w||t.workstream===w)&&(!s||t.status===s)&&(!o||t.owner===o)&&(!p||t.priority===p)).sort((a,b)=>WORKSTREAMS.indexOf(a.workstream)-WORKSTREAMS.indexOf(b.workstream)||PRIORITIES.indexOf(a.priority)-PRIORITIES.indexOf(b.priority)||String(a.due).localeCompare(String(b.due)))}
+function renderTasks(){const rows=filtered();document.getElementById('taskRows').innerHTML=rows.length?rows.map(t=>`<tr><td><div class="task-title">${esc(t.title)}</div><div class="task-note">${esc(t.notes||'')}</div></td><td>${esc(t.workstream)}</td><td><span class="badge ${badgeClass(t.status)}">${esc(t.status)}</span></td><td>${esc(t.owner||'')}</td><td class="${daysLate(t.due,t.status)?'p-critical':''}">${t.due||''}</td><td class="p-${t.priority.toLowerCase()}">${t.priority}</td><td>${esc(t.next||'')}${t.decision==='Yes'?'<div class="task-note p-critical">Client decision required</div>':''}</td><td class="row-actions"><button onclick="openTask('${t.id}')">Edit</button></td></tr>`).join(''):'<tr><td colspan="8"><div class="empty">No actions match the current filters.</div></td></tr>'}
+function renderFeed(){const rows=[...data.activity].sort((a,b)=>b.ts.localeCompare(a.ts)).slice(0,20);document.getElementById('activityFeed').innerHTML=rows.length?rows.map(a=>`<div class="feeditem"><div class="meta">${esc(a.by)} | ${new Date(a.ts).toLocaleString()}</div><div>${esc(a.text)}</div></div>`).join(''):'<div class="empty">No activity yet.</div>'}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function setupForms(){fillSelect('fWorkstream',WORKSTREAMS,false);fillSelect('fStatus',STATUSES,false);fillSelect('fOwner',OWNER_OPTIONS,false);fillSelect('fPriority',PRIORITIES,false)}
+function openTask(id){editId=id||null;setupForms();const t=id?data.tasks.find(x=>x.id===id):{title:'',workstream:'Finance Foundation',status:'Not Started',owner:'Jason',due:'',priority:'Medium',next:'',notes:'',decision:'No'};document.getElementById('modalTitle').textContent=id?'Edit Action':'Add Action';for(const [k,el] of Object.entries({title:'fTitle',workstream:'fWorkstream',status:'fStatus',owner:'fOwner',due:'fDue',priority:'fPriority',next:'fNext',notes:'fNotes',decision:'fDecision'}))document.getElementById(el).value=t[k]||'';document.getElementById('deleteTaskBtn').classList.toggle('hidden',!id);document.getElementById('taskModal').classList.add('show')}
+async function commit(reason){saveLocal();render();await cloudSave();if(reason)toast(reason)}
+function saveTask(){const obj={title:v('fTitle'),workstream:v('fWorkstream'),status:v('fStatus'),owner:normalizeOwner(v('fOwner')),due:v('fDue'),priority:v('fPriority'),next:v('fNext'),notes:v('fNotes'),decision:v('fDecision'),updated:new Date().toISOString()};if(!obj.title)return toast('Action title is required');if(editId){const i=data.tasks.findIndex(t=>t.id===editId),old=data.tasks[i];data.tasks[i]={...old,...obj};data.activity.push({id:uid('A'),ts:new Date().toISOString(),by:cloudName(),text:`Updated action: ${obj.title} (${old.status} to ${obj.status})`,taskId:editId})}else{obj.id=uid('T');data.tasks.push(obj);data.activity.push({id:uid('A'),ts:new Date().toISOString(),by:cloudName(),text:`Added action: ${obj.title}`,taskId:obj.id})}closeModal('taskModal');commit('Action saved')}
+function deleteTask(){if(!editId||!confirm('Delete this action?'))return;const t=data.tasks.find(x=>x.id===editId);data.tasks=data.tasks.filter(x=>x.id!==editId);data.activity.push({id:uid('A'),ts:new Date().toISOString(),by:cloudName(),text:`Deleted action: ${t.title}`,taskId:''});closeModal('taskModal');commit('Action deleted')}
+function v(id){return document.getElementById(id).value.trim()} function uid(p){return p+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function renderUpdateTaskOptions(){document.getElementById('uTask').innerHTML='<option value="">General update</option>'+data.tasks.filter(t=>t.status!=='Complete').map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('')}
+function addUpdate(){const text=v('uText'),by=v('uName')||'Unknown',taskId=v('uTask');if(!text)return toast('Enter an update');data.activity.push({id:uid('A'),ts:new Date().toISOString(),by,text,taskId});if(taskId){const t=data.tasks.find(x=>x.id===taskId);if(t)t.updated=new Date().toISOString()}document.getElementById('uText').value='';closeModal('updateModal');commit('Update logged')}
+function exportData(){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Design_Your_Price_OS_Data.json';a.click();URL.revokeObjectURL(a.href)}
+function importData(file){const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.tasks)throw Error();data=x;normalizeOwners();commit('Data imported')}catch(e){toast('Invalid data file')}};r.readAsText(file)}
+function resetPlan(){if(!confirm('Reload the 22-action plan for this week? This replaces the current local task list.'))return;data=freshSeed();saveLocal();render();toast('This week plan reloaded: '+data.tasks.length+' actions')}
+function executiveSummary(){const critical=data.tasks.filter(t=>t.priority==='Critical'&&t.status!=='Complete'),done=data.tasks.filter(t=>t.status==='Complete');return `DESIGN YOUR PRICE | FRIDAY HANDOFF SUMMARY
+
+WEEK COMPLETE: ${Math.round(done.length/Math.max(data.tasks.length,1)*100)}%
+
+CRITICAL OPEN
+${critical.map(t=>'• '+t.workstream+' | '+t.title+' | '+t.owner+' | '+t.due).join('\n')}
+
+HEAD PM HANDOFF TARGET
+• Mike start: August 3
+• Operating system: Head PM daily/weekly checklist + PM Dashboard + OpsVoice field loop
+
+SALES
+• Parked this week except Bid Portal CSV export dependency.`}
+function copySummary(){navigator.clipboard.writeText(executiveSummary()).then(()=>toast('Executive summary copied'))}
+function cfg(){try{return JSON.parse(localStorage.getItem(CFG))||{}}catch(e){return {}}} function cloudName(){return cfg().name||'Jason'}
+async function connectCloud(){const c={url:v('cUrl'),key:v('cKey'),workspace:v('cWorkspace')||'design-your-price',name:v('cName')||'Jason'};if(!c.url||!c.key)return toast('Supabase URL and key are required');localStorage.setItem(CFG,JSON.stringify(c));try{supa=window.supabase.createClient(c.url,c.key);const {data:row,error}=await supa.from('dyp_workspace').select('payload').eq('workspace_id',c.workspace).maybeSingle();if(error)throw error;if(row?.payload&&Array.isArray(row.payload.tasks)&&row.payload.tasks.length>0){if(confirm('Cloud data exists. Load it and replace local data?')){data=row.payload;normalizeOwners()}}else await cloudSave();subscribe();setSync(true);closeModal('cloudModal');render();toast('Cloud sync connected')}catch(e){console.error(e);toast('Cloud connection failed: '+e.message)}}
+async function cloudSave(){const c=cfg();if(!supa||!c.workspace)return;const {error}=await supa.from('dyp_workspace').upsert({workspace_id:c.workspace,payload:data,updated_at:new Date().toISOString()});if(error)console.error(error)}
+function subscribe(){const c=cfg();if(!supa||!c.workspace)return;if(channel)supa.removeChannel(channel);channel=supa.channel('dyp-'+c.workspace).on('postgres_changes',{event:'*',schema:'public',table:'dyp_workspace',filter:'workspace_id=eq.'+c.workspace},async()=>{const {data:row}=await supa.from('dyp_workspace').select('payload').eq('workspace_id',c.workspace).single();if(row?.payload){data=row.payload;normalizeOwners();saveLocal();render();toast('Live update received')}}).subscribe()}
+function setSync(live){document.getElementById('syncDot').classList.toggle('live',live);document.getElementById('syncStatus').textContent=live?'Cloud sync live':'Local mode';document.getElementById('syncDetail').textContent=live?'Shared workspace: '+cfg().workspace:'Changes save in this browser. Connect Supabase for live multi-user sharing.'}
+function disconnect(){localStorage.removeItem(CFG);supa=null;if(channel){channel.unsubscribe();channel=null}setSync(false);closeModal('cloudModal');toast('Cloud sync disconnected')}
+async function initCloud(){const c=cfg();if(c.url&&c.key){document.getElementById('cUrl').value=c.url;document.getElementById('cKey').value=c.key;document.getElementById('cWorkspace').value=c.workspace||'design-your-price';document.getElementById('cName').value=c.name||'Jason';try{supa=window.supabase.createClient(c.url,c.key);subscribe();setSync(true)}catch(e){setSync(false)}}}
+function applySpecial(kind){document.getElementById('dashboardView').classList.toggle('hidden',kind!=='dashboard');document.getElementById('statusFilter').value=kind==='waiting'?'Waiting':kind==='completed'?'Complete':'';document.getElementById('taskHeading').textContent=kind==='waiting'?'Waiting on Client':kind==='completed'?'Completed Actions':'Action Register';renderTasks();if(kind==='activity')document.getElementById('activityFeed').scrollIntoView({behavior:'smooth'})}
+document.getElementById('resetBtn').onclick=resetPlan;document.getElementById('addBtn').onclick=()=>openTask();document.getElementById('saveTaskBtn').onclick=saveTask;document.getElementById('deleteTaskBtn').onclick=deleteTask;document.getElementById('addUpdateBtn').onclick=()=>document.getElementById('updateModal').classList.add('show');document.getElementById('saveUpdateBtn').onclick=addUpdate;document.getElementById('exportBtn').onclick=exportData;document.getElementById('importBtn').onclick=()=>document.getElementById('fileInput').click();document.getElementById('fileInput').onchange=e=>e.target.files[0]&&importData(e.target.files[0]);document.getElementById('copySummaryBtn').onclick=copySummary;document.getElementById('cloudBtn').onclick=()=>document.getElementById('cloudModal').classList.add('show');document.getElementById('connectBtn').onclick=connectCloud;document.getElementById('disconnectBtn').onclick=disconnect;['search','workstreamFilter','statusFilter','ownerFilter','priorityFilter'].forEach(id=>document.getElementById(id).addEventListener(id==='search'?'input':'change',renderTasks));document.getElementById('clearFilters').onclick=()=>{['search','workstreamFilter','statusFilter','ownerFilter','priorityFilter'].forEach(id=>document.getElementById(id).value='');document.getElementById('taskHeading').textContent='This Week Action Register';renderTasks()};document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');if(b.dataset.workstream){applySpecial('dashboard');document.getElementById('workstreamFilter').value=b.dataset.workstream;document.getElementById('taskHeading').textContent=b.dataset.workstream;renderTasks()}else applySpecial(b.dataset.special||'dashboard')});
+render();initCloud();
+</script>
+</body>
+</html>
